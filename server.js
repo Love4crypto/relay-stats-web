@@ -50,7 +50,8 @@ const logsDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
-// Add this near the top of your server.js file
+
+// Add this near the top of your server.js file - Cache Control
 app.use((req, res, next) => {
   res.header('Cache-Control', 'no-store, max-age=0');
   res.header('Pragma', 'no-cache');
@@ -58,11 +59,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// And make sure your static files middleware is like this:
-app.use(express.static(path.join(__dirname, 'public'), {
-  etag: false,
-  maxAge: '0'
-}));
 // Enhanced cache cleanup function
 function cleanupCacheFiles() {
   const cacheDir = path.join(__dirname, 'cache');
@@ -214,31 +210,34 @@ app.use((req, res, next) => {
 // Basic middleware
 app.use(cors({
   origin: config.NODE_ENV === 'production' ? 
-    ['https://yourdomain.com'] : 
+    ['https://relaystats.xyz'] : 
     ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 }));
 
+// Express 5 json parsing with error handling
 app.use(express.json({ 
-  limit: '10mb',
-  verify: (req, res, buf) => {
-    try {
-      JSON.parse(buf);
-    } catch (e) {
-      logger.error('Invalid JSON in request body');
-      throw new Error('Invalid JSON');
-    }
-  }
+  limit: '10mb'
 }));
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    logger.error('Invalid JSON in request body');
+    return res.status(400).json({
+      error: 'Invalid JSON',
+      code: 'INVALID_JSON'
+    });
+  }
+  next(err);
+});
 
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Enhanced static file serving with caching
-app.use(express.static('public', {
-  maxAge: config.NODE_ENV === 'production' ? '1d' : '1h',
-  etag: true,
-  lastModified: true,
-  cacheControl: true,
+// Static file serving with Express 5 options
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: '0',
+  lastModified: false,
   setHeaders: (res, path) => {
     if (path.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');
@@ -260,7 +259,7 @@ app.use('/api/', (req, res, next) => {
   next();
 });
 
-// Enhanced health check endpoint
+// Health check endpoint - Express 5 style without callbacks
 app.get('/health', (req, res) => {
   const healthcheck = {
     status: 'ok',
@@ -275,21 +274,15 @@ app.get('/health', (req, res) => {
     }
   };
 
-  try {
-    res.json(healthcheck);
-  } catch (error) {
-    healthcheck.status = 'error';
-    res.status(503).json(healthcheck);
-  }
+  res.json(healthcheck);
 });
 
-// Enhanced API endpoint to analyze an address
+// API endpoint to analyze an address - Express 5 async/await style
 app.post('/api/analyze', analysisLimiter, async (req, res) => {
   const startTime = Date.now();
+  const { address } = req.body;
   
-  try {
-    const { address } = req.body;
-    
+  try {  
     // Enhanced address validation
     if (!address || typeof address !== 'string' || address.trim().length === 0) {
       logger.warn('Invalid address provided:', { address, ip: req.ip });
@@ -372,7 +365,7 @@ app.post('/api/analyze', analysisLimiter, async (req, res) => {
   }
 });
 
-// Enhanced API endpoint to verify eligibility for NFT minting
+// API endpoint to verify eligibility for NFT minting - Express 5 style
 app.post('/api/verify-eligibility', analysisLimiter, async (req, res) => {
   try {
     const { address } = req.body;
@@ -429,12 +422,12 @@ app.post('/api/verify-eligibility', analysisLimiter, async (req, res) => {
   }
 });
 
-// Serve the main page
+// Serve the main page - Express 5 style
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API documentation endpoint
+// API documentation endpoint - Express 5 style
 app.get('/api', (req, res) => {
   res.json({
     name: 'Relay Stats API',
@@ -448,7 +441,7 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Enhanced 404 handler
+// Enhanced 404 handler for Express 5
 app.use('*', (req, res) => {
   logger.warn('404 - Route not found:', { url: req.originalUrl, ip: req.ip, userAgent: req.get('User-Agent') });
   res.status(404).json({
@@ -459,7 +452,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Enhanced global error handler
+// Enhanced global error handler for Express 5
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', { 
     error: err.message, 
