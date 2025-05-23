@@ -442,7 +442,7 @@ app.get('/api', (req, res) => {
 });
 
 // Enhanced 404 handler for Express 5
-app.use('*', (req, res) => {
+app.use((req, res) => {
   logger.warn('404 - Route not found:', { url: req.originalUrl, ip: req.ip, userAgent: req.get('User-Agent') });
   res.status(404).json({
     error: 'Route not found',
