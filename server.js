@@ -50,7 +50,19 @@ const logsDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
+// Add this near the top of your server.js file
+app.use((req, res, next) => {
+  res.header('Cache-Control', 'no-store, max-age=0');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  next();
+});
 
+// And make sure your static files middleware is like this:
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: '0'
+}));
 // Enhanced cache cleanup function
 function cleanupCacheFiles() {
   const cacheDir = path.join(__dirname, 'cache');
