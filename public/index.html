@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="styles.css?v=1.0.2">
 
 <!-- Favicons -->
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=1.0.2">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=1.0.2">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=1.0.2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.0.2">
+<link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png?v=1.0.2">
+<link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png?v=1.0.2">
 <link rel="manifest" href="site.webmanifest">
 
 <meta name="msapplication-TileColor" content="#6366f1">
@@ -212,17 +212,34 @@
   <!-- Application Code -->
   <script src="app.js?v=1.0.2"></script>
 </body>
-<footer>
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-logo">
+      <img src="relaylogo.png" alt="Relay Logo" class="footer-relay-logo">
+      <h3>Relay Stats App</h3>
+    </div>
+    <div class="footer-links">
+      <a href="https://relay.link" target="_blank" class="footer-link">
+        <span class="link-icon">🔗</span>Official Relay Protocol
+      </a>
+      <a href="https://twitter.com/love_4_crypto" target="_blank" class="footer-link">
+        <span class="link-icon">🐦</span>Follow Developer
+      </a>
+    </div>
+  </div>
+  
+  <div class="footer-divider"></div>
+  
   <div class="footer-disclaimer">
-    <p class="disclaimer-main">
-      <span class="disclaimer-badge">Disclaimer:</span>
+    <p class="disclaimer-text">
+      <span class="disclaimer-badge">Disclaimer</span>
       This tool is created independently by <a href="https://twitter.com/love_4_crypto" target="_blank">@love_4_crypto</a> 
       and is not officially affiliated with Relay Protocol - yet 🙂
     </p>
-    <p class="footer-links">
-      <a href="https://relay.link" target="_blank">Official Relay Protocol</a> | 
-      <a href="https://twitter.com/love_4_crypto" target="_blank">Follow Developer</a>
-    </p>
+  </div>
+  
+  <div class="footer-bottom">
+    <p class="copyright">© 2025 Love_4_Crypto. All rights reserved.</p>
   </div>
 </footer>
 </html>
