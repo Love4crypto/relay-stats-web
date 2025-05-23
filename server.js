@@ -8,7 +8,7 @@ const analysisModule = require('./analysis');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Cache cleanup function
+// Cache cleanup function - with safeguards to not interfere with active operations
 function cleanupCacheFiles() {
   const cacheDir = path.join(__dirname, 'cache');
   const maxAgeMs = 12 * 60 * 60 * 1000; // 12 hours
@@ -26,15 +26,21 @@ function cleanupCacheFiles() {
     let deletedCount = 0;
     
     for (const file of files) {
-      const filePath = path.join(cacheDir, file);
-      if (fs.statSync(filePath).isDirectory()) continue;
-      
-      const stats = fs.statSync(filePath);
-      const fileAgeMs = now - stats.mtimeMs;
-      
-      if (fileAgeMs > maxAgeMs) {
-        fs.unlinkSync(filePath);
-        deletedCount++;
+      try {
+        const filePath = path.join(cacheDir, file);
+        if (fs.statSync(filePath).isDirectory()) continue;
+        
+        const stats = fs.statSync(filePath);
+        const fileAgeMs = now - stats.mtimeMs;
+        
+        // Only delete files older than 12 hours
+        if (fileAgeMs > maxAgeMs) {
+          fs.unlinkSync(filePath);
+          deletedCount++;
+        }
+      } catch (fileErr) {
+        // Skip any file that causes an error (might be in use)
+        console.error('Error processing cache file, skipping:', fileErr.message);
       }
     }
     
@@ -44,16 +50,29 @@ function cleanupCacheFiles() {
   }
 }
 
-// Schedule cache cleanup every 12 hours
-schedule.scheduleJob('0 */12 * * *', cleanupCacheFiles);
-
-// Also run once at startup
-cleanupCacheFiles();
+// Schedule cache cleanup to run every 12 hours
+const job = schedule.scheduleJob('0 */12 * * *', cleanupCacheFiles);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+// API endpoint to analyze an address
+app.post('/api/analyze', async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
+    
+    const results = await analysisModule.analyzeAddress(address);
+    res.json(results);
+  } catch (error) {
+    console.error('Analysis error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // API endpoint to verify eligibility for NFT minting
 app.post('/api/verify-eligibility', async (req, res) => {
