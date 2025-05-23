@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Relay Stats Analyzer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-title-container">
+        <img src="relaylogo.png" alt="Relay Logo" class="relay-logo">
+        <h1>Relay Bridge Stats</h1>
+      </div>
+      
+      <h2>Proudly Created by</h2>
+      <div class="twitter-profile-card">
+        <img src="https://pbs.twimg.com/profile_images/1907772459727654912/ayy3k5dc_400x400.png" alt="Love_4_Crypto" class="twitter-profile-image">
+        <div class="twitter-profile-info">
+          <div class="twitter-name">Love_4_Crypto</div>
+          <div class="twitter-handle">@love_4_crypto</div>
+        </div>
+        <a href="https://twitter.com/intent/follow?screen_name=love_4_crypto" target="_blank" class="twitter-follow-button">
+          <i class="twitter-icon"></i>
+          Follow
+        </a>
+      </div>
+      
+      <div class="wallet-status-container">
+        <div id="wallet-status">Not connected</div>
+        <button id="disconnect-btn" class="disconnect-button hidden">Disconnect</button>
+      </div>
+      
+      <button id="connect-wallet-btn" class="connect-wallet-button">Connect Wallet</button>
+      <p class="subtitle">Connect your wallet to see your cross-chain activity</p>
+    </header>
+    
+    <!-- Wallet Connection Modal -->
+    <div id="wallet-modal" class="wallet-modal hidden">
+      <div class="wallet-modal-overlay"></div>
+      <div class="wallet-modal-content">
+        <div class="wallet-modal-header">
+          <h2>Connect Your Wallet</h2>
+          <button id="close-modal-btn" class="close-modal-btn">&times;</button>
+        </div>
+        
+        <div class="wallet-groups">
+          <div class="wallet-group">
+            <h3>EVM Wallets</h3>
+            <div class="wallet-buttons">
+              <button id="connect-metamask" class="wallet-button">
+                <img src="https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg" alt="MetaMask">
+                <span>MetaMask</span>
+              </button>
+              <button id="connect-walletconnect" class="wallet-button">
+                <img src="https://seeklogo.com/images/W/walletconnect-logo-EE83B50C97-seeklogo.com.png" alt="WalletConnect">
+                <span>WalletConnect</span>
+              </button>
+              <button id="connect-coinbase" class="wallet-button">
+                <img src="https://images.ctfassets.net/o10es7wu5gm1/TWlW6aoAXPX7yUg5ShsZ0/c02522911b90b766eb8eef709e42b8eb/WalletLogo.png" alt="Coinbase">
+                <span>Coinbase</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="wallet-group">
+            <h3>Solana Wallets</h3>
+            <div class="wallet-buttons">
+              <button id="connect-phantom" class="wallet-button">
+                <img src="https://187760183-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MVOiF6Zqit57q_hxJYp%2Fuploads%2FHEjleywo9QOnfYebBPCZ%2FPhantom_SVG_Icon.svg?alt=media&token=71b80a0a-def7-4f98-ae70-5e0843fdaaec" alt="Phantom">
+                <span>Phantom</span>
+              </button>
+              <button id="connect-solflare" class="wallet-button">
+                <img src="https://raw.githubusercontent.com/solflare-wallet/solflare-snap/master/logo.svg" alt="Solflare">
+                <span>Solflare</span>
+              </button>
+              <button id="connect-backpack" class="wallet-button">
+                <img src="data:image/jpeg;base64,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" alt="Backpack">
+                <span>Backpack</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="wallet-group">
+            <h3>Cosmos Wallets</h3>
+            <div class="wallet-buttons">
+              <button id="connect-keplr" class="wallet-button">
+                <img src="https://raw.githubusercontent.com/chainapsis/keplr-wallet/refs/heads/develop/docs/static/img/keplr-logo-256.png" alt="Keplr">
+                <span>Keplr</span>
+              </button>
+              <button id="connect-leap" class="wallet-button">
+                <img src="https://logo.clearbit.com/leapwallet.io" alt="Leap">
+                <span>Leap</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="manual-entry">
+      <p>Or enter an address manually:</p>
+      <input type="text" id="address-input" placeholder="Enter wallet address...">
+      <button id="analyze-btn">Analyze</button>
+    </div>
+    
+    <div id="loading" class="hidden">
+      <div class="spinner"></div>
+      <p>Analyzing your transactions...</p>
+    </div>
+    
+    <div id="results" class="hidden">
+      <div class="summary-container">
+        <h2>Activity Summary</h2>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <h3>First Transaction</h3>
+            <p id="first-date">-</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Transactions</h3>
+            <p id="tx-count">-</p>
+          </div>
+          <div class="summary-item">
+            <h3>Chains Used</h3>
+            <p id="chains-count">-</p>
+          </div>
+          <div class="summary-item">
+            <h3>Tokens Used</h3>
+            <p id="tokens-count">-</p>
+          </div>
+        </div>
+        
+        <div class="total-value">
+          <h2>Total Volume</h2>
+          <p id="total-value-display">$0.00</p>
+        </div>
+      </div>
+      
+      <div class="tokens-container">
+        <h2>Tokens Bridged</h2>
+        <table id="tokens-table">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Amount</th>
+              <th>Price</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="tokens-tbody"></tbody>
+        </table>
+      </div>
+      
+    </div>
+    
+    <div id="error-message" class="hidden">
+      <h3>Error</h3>
+      <p id="error-text"></p>
+      <ul id="troubleshooting-list"></ul>
+    </div>
+
+    <footer>
+      <p>Relay Stats App | <a href="https://relay.link" target="_blank">Powered by Relay</a></p>
+    </footer>
+  </div>
+  <script>
+  if (typeof exports === 'undefined') {
+    var exports = {};
+  }
+  if (typeof module === 'undefined') {
+    var module = {exports: exports};
+  }
+</script>
+  <!-- All Scripts - Properly ordered -->
+  <!-- Core Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+  
+  <!-- Wallet Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@coinbase/wallet-sdk@3.6.0/dist/index.min.js"></script>
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <script src="https://unpkg.com/@solflare-wallet/sdk@latest/dist/index.umd.js"></script>
+  
+  <!-- Application Code -->
+  <script src="app.js"></script>
+</body>
+<footer>
+  <div class="footer-disclaimer">
+    <p class="disclaimer-main">
+      <span class="disclaimer-badge">Disclaimer:</span>
+      This tool is created independently by <a href="https://twitter.com/love_4_crypto" target="_blank">@love_4_crypto</a> 
+      and is not officially affiliated with Relay Protocol - yet 🙂
+    </p>
+    <p class="footer-links">
+      <a href="https://relay.link" target="_blank">Official Relay Protocol</a> | 
+      <a href="https://twitter.com/love_4_crypto" target="_blank">Follow Developer</a>
+    </p>
+  </div>
+</footer>
+</html>
