@@ -101,15 +101,22 @@ document.addEventListener('DOMContentLoaded', () => {
   
 async function connectWalletConnect() {
   try {
+    // Check if WalletConnect is available
+    if (typeof WalletConnectProvider === 'undefined') {
+      console.error("WalletConnect provider not found");
+      alert("WalletConnect library not loaded. Please refresh the page and try again.");
+      return;
+    }
+
     // Check if we're on mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     console.log("Device detection:", isMobile ? "Mobile" : "Desktop");
     
     // Mobile-optimized configuration
-    const provider = new WalletConnectProvider.default({
+    const providerOptions = {
       rpc: {
-        1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // Public Infura ID
-        137: "https://polygon-rpc.com",
+        1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+        137: "https://polygon-rpc.com", 
         56: "https://bsc-dataseed.binance.org"
       },
       qrcodeModalOptions: {
@@ -119,30 +126,28 @@ async function connectWalletConnect() {
           "rainbow",
           "argent",
           "imtoken"
-        ],
-        desktopLinks: []
+        ]
       }
-    });
+    };
     
-    // Special handling for mobile
-    if (isMobile) {
-      // On mobile, we need to handle deep linking differently
-      console.log("Using mobile configuration for WalletConnect");
-      provider.qrcodeModalOptions = {
-        ...provider.qrcodeModalOptions,
-        mobileOnly: true
-      };
-    }
+    // Create a new provider instance
+    console.log("Creating WalletConnect provider...");
+    const provider = new WalletConnectProvider.default(providerOptions);
     
     console.log("Enabling WalletConnect provider...");
     await provider.enable();
     window.walletConnectProvider = provider;
     
-    // Use Web3 from window to avoid requiring additional imports
+    // Create Web3 instance
+    console.log("Creating Web3 instance...");
     const web3 = new Web3(provider);
+    
+    // Get accounts
+    console.log("Getting accounts...");
     const accounts = await web3.eth.getAccounts();
     const address = accounts[0];
     
+    console.log("Connected with address:", address);
     updateWalletStatus(address, 'WalletConnect');
     analyzeAddress(address);
     
@@ -155,6 +160,7 @@ async function connectWalletConnect() {
   } catch (error) {
     console.error('WalletConnect error:', error);
     walletStatus.textContent = 'Connection failed';
+    alert("WalletConnect connection failed: " + error.message);
   }
 }
   
