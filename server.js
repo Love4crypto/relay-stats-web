@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const schedule = require('node-schedule'); // You'll need to install this: npm install node-schedule
+const schedule = require('node-schedule');
 const analysisModule = require('./analysis');
 
 const app = express();
@@ -12,8 +12,6 @@ const PORT = process.env.PORT || 3000;
 function cleanupCacheFiles() {
   const cacheDir = path.join(__dirname, 'cache');
   const maxAgeMs = 12 * 60 * 60 * 1000; // 12 hours
-  const now = Date.now();
-  let deletedCount = 0;
   
   console.log('Starting scheduled cache cleanup...');
   
@@ -23,19 +21,17 @@ function cleanupCacheFiles() {
   }
   
   try {
-    // Read all files in the cache directory
     const files = fs.readdirSync(cacheDir);
+    const now = Date.now();
+    let deletedCount = 0;
     
     for (const file of files) {
       const filePath = path.join(cacheDir, file);
-      
-      // Skip directories
       if (fs.statSync(filePath).isDirectory()) continue;
       
       const stats = fs.statSync(filePath);
       const fileAgeMs = now - stats.mtimeMs;
       
-      // Delete file if older than maxAge
       if (fileAgeMs > maxAgeMs) {
         fs.unlinkSync(filePath);
         deletedCount++;
