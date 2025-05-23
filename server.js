@@ -146,17 +146,18 @@ app.use(compression({
   }
 }));
 
-// Enhanced rate limiting
+// Enhanced rate limiting (Updated for v7.5.0)
 const limiter = rateLimit({
   windowMs: config.RATE_LIMIT.WINDOW_MS,
-  max: config.RATE_LIMIT.MAX_REQUESTS,
+  limit: config.RATE_LIMIT.MAX_REQUESTS, // "max" is now "limit"
   message: {
     error: 'Too many requests from this IP, please try again later.',
     code: 'RATE_LIMIT',
     retryAfter: config.RATE_LIMIT.WINDOW_MS / 1000
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  headers: true, // "standardHeaders" is now just "headers"
+  // legacyHeaders is removed in v7+
+  skipSuccessfulRequests: false,
   skip: (req) => {
     // Skip rate limiting for health checks
     return req.url === '/health';
@@ -165,14 +166,14 @@ const limiter = rateLimit({
 
 const analysisLimiter = rateLimit({
   windowMs: config.RATE_LIMIT.ANALYSIS_WINDOW_MS,
-  max: config.RATE_LIMIT.ANALYSIS_MAX_REQUESTS,
+  limit: config.RATE_LIMIT.ANALYSIS_MAX_REQUESTS, // "max" is now "limit"
   message: {
     error: 'Too many analysis requests, please try again later.',
     code: 'ANALYSIS_RATE_LIMIT',
     retryAfter: config.RATE_LIMIT.ANALYSIS_WINDOW_MS / 1000
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  headers: true, // "standardHeaders" is now just "headers"
+  // Remove legacyHeaders
 });
 
 // Request timeout middleware
