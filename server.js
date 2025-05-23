@@ -1,10 +1,58 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const schedule = require('node-schedule'); // You'll need to install this: npm install node-schedule
 const analysisModule = require('./analysis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Cache cleanup function
+function cleanupCacheFiles() {
+  const cacheDir = path.join(__dirname, 'cache');
+  const maxAgeMs = 12 * 60 * 60 * 1000; // 12 hours
+  const now = Date.now();
+  let deletedCount = 0;
+  
+  console.log('Starting scheduled cache cleanup...');
+  
+  if (!fs.existsSync(cacheDir)) {
+    console.log('Cache directory does not exist. Nothing to clean up.');
+    return;
+  }
+  
+  try {
+    // Read all files in the cache directory
+    const files = fs.readdirSync(cacheDir);
+    
+    for (const file of files) {
+      const filePath = path.join(cacheDir, file);
+      
+      // Skip directories
+      if (fs.statSync(filePath).isDirectory()) continue;
+      
+      const stats = fs.statSync(filePath);
+      const fileAgeMs = now - stats.mtimeMs;
+      
+      // Delete file if older than maxAge
+      if (fileAgeMs > maxAgeMs) {
+        fs.unlinkSync(filePath);
+        deletedCount++;
+      }
+    }
+    
+    console.log(`Cache cleanup complete. Deleted ${deletedCount} files.`);
+  } catch (err) {
+    console.error('Error during cache cleanup:', err);
+  }
+}
+
+// Schedule cache cleanup every 12 hours
+schedule.scheduleJob('0 */12 * * *', cleanupCacheFiles);
+
+// Also run once at startup
+cleanupCacheFiles();
 
 // Middleware
 app.use(cors());
@@ -77,4 +125,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`Open your browser and visit: http://localhost:${PORT}`);
+  console.log(`Cache cleanup scheduled to run every 12 hours`);
 });
