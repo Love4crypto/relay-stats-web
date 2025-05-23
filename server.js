@@ -431,7 +431,7 @@ app.get('/api', (req, res) => {
       '/api/analyze': 'POST - Analyze wallet address',
       '/api/verify-eligibility': 'POST - Check NFT eligibility'
     },
-    documentation: 'https://github.com/your-repo/relay-stats-app'
+    documentation: 'https://github.com/Love4crypto/relay-stats-app'
   });
 });
 
