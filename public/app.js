@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const connectBackpackBtn = document.getElementById('connect-backpack');
   const connectKeplrBtn = document.getElementById('connect-keplr');
   const connectLeapBtn = document.getElementById('connect-leap');
+  connectWalletConnectBtn.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  connectWalletConnect();
+});
   
   // Add new modal element references
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
@@ -95,48 +99,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  async function connectWalletConnect() {
-    try {
-      // You'd need to register with Infura and get an ID for production
-      // For local testing, we can use a public endpoint
-      const provider = new WalletConnectProvider.default({
-        rpc: {
-          1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // Public Infura ID
-          137: "https://polygon-rpc.com",
-          56: "https://bsc-dataseed.binance.org"
-        },
-        qrcodeModalOptions: {
-          mobileLinks: [
-            "rainbow",
-            "metamask",
-            "trust",
-            "argent",
-            "imtoken"
-          ],
-        },
-      });
-      
-      await provider.enable();
-      window.walletConnectProvider = provider;
-      
-      // Use Web3 from window to avoid requiring additional imports
-      const web3 = new Web3(provider);
-      const accounts = await web3.eth.getAccounts();
-      const address = accounts[0];
-      
-      updateWalletStatus(address, 'WalletConnect');
-      analyzeAddress(address);
-      
-      // Handle disconnect
-      provider.on("disconnect", () => {
-        resetConnectionUI();
-      });
-      
-    } catch (error) {
-      console.error('WalletConnect error:', error);
-      walletStatus.textContent = 'Connection failed';
+async function connectWalletConnect() {
+  try {
+    // Check if we're on mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log("Device detection:", isMobile ? "Mobile" : "Desktop");
+    
+    // Mobile-optimized configuration
+    const provider = new WalletConnectProvider.default({
+      rpc: {
+        1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // Public Infura ID
+        137: "https://polygon-rpc.com",
+        56: "https://bsc-dataseed.binance.org"
+      },
+      qrcodeModalOptions: {
+        mobileLinks: [
+          "metamask",
+          "trust",
+          "rainbow",
+          "argent",
+          "imtoken"
+        ],
+        desktopLinks: []
+      }
+    });
+    
+    // Special handling for mobile
+    if (isMobile) {
+      // On mobile, we need to handle deep linking differently
+      console.log("Using mobile configuration for WalletConnect");
+      provider.qrcodeModalOptions = {
+        ...provider.qrcodeModalOptions,
+        mobileOnly: true
+      };
     }
+    
+    console.log("Enabling WalletConnect provider...");
+    await provider.enable();
+    window.walletConnectProvider = provider;
+    
+    // Use Web3 from window to avoid requiring additional imports
+    const web3 = new Web3(provider);
+    const accounts = await web3.eth.getAccounts();
+    const address = accounts[0];
+    
+    updateWalletStatus(address, 'WalletConnect');
+    analyzeAddress(address);
+    
+    // Handle disconnect
+    provider.on("disconnect", (code, reason) => {
+      console.log("WalletConnect disconnected:", code, reason);
+      resetConnectionUI();
+    });
+    
+  } catch (error) {
+    console.error('WalletConnect error:', error);
+    walletStatus.textContent = 'Connection failed';
   }
+}
   
   async function connectCoinbase() {
     try {

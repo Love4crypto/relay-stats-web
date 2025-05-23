@@ -749,9 +749,29 @@ header h2 {
   
   /* Wallet buttons */
   .wallet-button {
-    padding: 12px 16px;
     min-height: 48px;
+	padding: 15px 10px; /* Larger touch target */
+  } 
+ 
+.wallet-button img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+  
+  /* Fix for touch events */
+  .wallet-modal-content {
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   }
+  
+  /* Better tap areas */
+  .close-modal-btn {
+    padding: 12px;
+    font-size: 24px;
+  }
+
   
   /* Wallet status and disconnect */
   .wallet-status-container {
@@ -1238,4 +1258,10 @@ header h2 {
   .footer-disclaimer {
     padding: 0 15px;
   }
+}
+
+/* Add this fallback for WalletConnect logo */
+#connect-walletconnect img {
+  background-color: rgb(64, 153, 255, 0.1);
+  padding: 4px;
 }
