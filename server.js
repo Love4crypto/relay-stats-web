@@ -55,22 +55,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// API endpoint to analyze an address
-app.post('/api/analyze', async (req, res) => {
-  try {
-    const { address } = req.body;
-    if (!address) {
-      return res.status(400).json({ error: 'Address is required' });
-    }
-    
-    const results = await analysisModule.analyzeAddress(address);
-    res.json(results);
-  } catch (error) {
-    console.error('Analysis error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // API endpoint to verify eligibility for NFT minting
 app.post('/api/verify-eligibility', async (req, res) => {
   try {
