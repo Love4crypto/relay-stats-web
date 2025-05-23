@@ -1088,20 +1088,16 @@ header h2 {
       display: inline;
     }
 
-/* Enhanced Footer Styling */
+/* Narrow Footer Styling */
 .site-footer {
-  margin-top: 60px;
-  padding: 40px 0 20px;
+  max-width: 1000px; /* Match your main container width */
+  margin: 60px auto 0;
+  padding: 40px 20px 20px;
   background: linear-gradient(to bottom, rgba(143, 85, 255, 0.05), rgba(239, 65, 255, 0.1));
+  border-radius: 12px;
   position: relative;
   overflow: hidden;
-}
-
-/* Add this new container class for footer content */
-.footer-container {
-  max-width: 1000px; /* Match your main container width */
-  margin: 0 auto;
-  padding: 0 20px; /* Consistent padding with main container */
+  box-shadow: 0 4px 20px rgba(143, 85, 255, 0.1);
 }
 
 .site-footer::before {
@@ -1124,7 +1120,6 @@ header h2 {
   gap: 20px;
   margin-bottom: 30px;
 }
-
 
 .footer-logo {
   display: flex;
