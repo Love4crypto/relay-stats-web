@@ -1093,10 +1093,15 @@ header h2 {
   margin-top: 60px;
   padding: 40px 0 20px;
   background: linear-gradient(to bottom, rgba(143, 85, 255, 0.05), rgba(239, 65, 255, 0.1));
-  border-top: 1px solid var(--border-light);
-  border-radius: 16px 16px 0 0;
   position: relative;
   overflow: hidden;
+}
+
+/* Add this new container class for footer content */
+.footer-container {
+  max-width: 1000px; /* Match your main container width */
+  margin: 0 auto;
+  padding: 0 20px; /* Consistent padding with main container */
 }
 
 .site-footer::before {
@@ -1117,9 +1122,9 @@ header h2 {
   align-items: center;
   flex-wrap: wrap;
   gap: 20px;
-  padding: 0 30px;
   margin-bottom: 30px;
 }
+
 
 .footer-logo {
   display: flex;
