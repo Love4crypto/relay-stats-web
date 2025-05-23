@@ -56,78 +56,78 @@
       <button id="connect-wallet-btn" class="connect-wallet-button">Connect Wallet</button>
       <p class="subtitle">Connect your wallet to see your cross-chain activity</p>
     </header>
+      
+<div id="wallet-modal" class="wallet-modal hidden">
+  <div class="wallet-modal-overlay"></div>
+  <div class="wallet-modal-content">
+    <div class="wallet-modal-header">
+      <h2>Connect Wallet</h2>
+      <button id="close-modal-btn" class="close-modal-btn">×</button>
+    </div>
     
-    <!-- Clean Wallet Modal -->
-    <div id="wallet-modal" class="wallet-modal hidden">
-      <div class="wallet-modal-overlay"></div>
-      <div class="wallet-modal-content">
-        <div class="wallet-modal-header">
-          <h2>Connect Wallet</h2>
-          <button id="close-modal-btn" class="close-modal-btn">&times;</button>
-        </div>
-        
-        <div class="wallet-groups">
-          <!-- Ethereum Wallets -->
-          <div class="wallet-group">
-            <h3>Ethereum</h3>
-            <div class="wallet-options">
-              <button id="connect-metamask" class="wallet-option">
-                <div class="wallet-icon metamask"></div>
-                <span>MetaMask</span>
-              </button>
-              <button id="connect-walletconnect" class="wallet-option">
-                <div class="wallet-icon walletconnect"></div>
-                <span>WalletConnect</span>
-              </button>
-              <button id="connect-coinbase" class="wallet-option">
-                <div class="wallet-icon coinbase"></div>
-                <span>Coinbase</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Solana Wallets -->
-          <div class="wallet-group">
-            <h3>Solana</h3>
-            <div class="wallet-options">
-              <button id="connect-phantom" class="wallet-option">
-                <div class="wallet-icon phantom"></div>
-                <span>Phantom</span>
-              </button>
-              <button id="connect-solflare" class="wallet-option">
-                <div class="wallet-icon solflare"></div>
-                <span>Solflare</span>
-              </button>
-              <button id="connect-backpack" class="wallet-option">
-                <div class="wallet-icon backpack"></div>
-                <span>Backpack</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Cosmos Wallets -->
-          <div class="wallet-group">
-            <h3>Cosmos</h3>
-            <div class="wallet-options">
-              <button id="connect-keplr" class="wallet-option">
-                <div class="wallet-icon keplr"></div>
-                <span>Keplr</span>
-              </button>
-              <button id="connect-leap" class="wallet-option">
-                <div class="wallet-icon leap"></div>
-                <span>Leap</span>
-              </button>
-            </div>
-          </div>
+    <div class="wallet-groups">
+      <!-- Ethereum Wallets -->
+      <div class="wallet-group">
+        <h3>Ethereum</h3>
+        <div class="wallet-buttons">
+          <button id="connect-metamask" class="wallet-button">
+            <div class="wallet-icon metamask-icon"></div>
+            <span>MetaMask</span>
+          </button>
+          <button id="connect-walletconnect" class="wallet-button">
+            <div class="wallet-icon wc-icon"></div>
+            <span>WalletConnect</span>
+          </button>
+          <button id="connect-coinbase" class="wallet-button">
+            <div class="wallet-icon coinbase-icon"></div>
+            <span>Coinbase</span>
+          </button>
         </div>
       </div>
+
+      <!-- Solana Wallets -->
+      <div class="wallet-group">
+        <h3>Solana</h3>
+        <div class="wallet-buttons">
+          <button id="connect-phantom" class="wallet-button">
+            <div class="wallet-icon phantom-icon"></div>
+            <span>Phantom</span>
+          </button>
+          <button id="connect-solflare" class="wallet-button">
+            <div class="wallet-icon solflare-icon"></div>
+            <span>Solflare</span>
+          </button>
+          <button id="connect-backpack" class="wallet-button">
+            <div class="wallet-icon backpack-icon"></div>
+            <span>Backpack</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cosmos Wallets -->
+      <div class="wallet-group">
+        <h3>Cosmos</h3>
+        <div class="wallet-buttons">
+          <button id="connect-keplr" class="wallet-button">
+            <div class="wallet-icon keplr-icon"></div>
+            <span>Keplr</span>
+          </button>
+          <button id="connect-leap" class="wallet-button">
+            <div class="wallet-icon leap-icon"></div>
+            <span>Leap</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Manual Entry -->
+      <div class="manual-entry">
+        <p>Or enter an address manually:</p>
+        <input type="text" id="address-input" placeholder="Enter wallet address..." class="address-input">
+        <button id="analyze-btn" class="analyze-btn">Analyze</button>
+      </div>
     </div>
-    
-    <div class="manual-entry">
-      <p>Or enter an address manually:</p>
-      <input type="text" id="address-input" placeholder="Enter wallet address..." autocomplete="off" spellcheck="false">
-      <button id="analyze-btn">Analyze</button>
-    </div>
+  </div>
+</div>
     
     <!-- Loading State -->
     <div id="loading" class="hidden">

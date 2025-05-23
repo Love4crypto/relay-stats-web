@@ -1,6 +1,7 @@
-// Add this to your app.js file (replace or add to existing wallet modal code)
-
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize UI elements
+  initializeUI();
+
   // Wallet modal elements
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
   const walletModal = document.getElementById('wallet-modal');
@@ -20,13 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Event listeners
-  connectWalletBtn.addEventListener('click', showWalletModal);
-  closeModalBtn.addEventListener('click', hideWalletModal);
-  walletModalOverlay.addEventListener('click', hideWalletModal);
+  connectWalletBtn?.addEventListener('click', showWalletModal);
+  closeModalBtn?.addEventListener('click', hideWalletModal);
+  walletModalOverlay?.addEventListener('click', hideWalletModal);
 
   // Close modal with Escape key
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !walletModal.classList.contains('hidden')) {
+    if (e.key === 'Escape' && walletModal && !walletModal.classList.contains('hidden')) {
       hideWalletModal();
     }
   });
@@ -54,7 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Wallet connection functions (add these if not already in your app.js)
+  // Manual address analysis
+  const analyzeBtn = document.getElementById('analyze-btn');
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', analyzeAddress);
+  }
+
+  // Wallet connection functions 
   async function connectMetaMask() {
     if (typeof window.ethereum !== 'undefined') {
       try {
@@ -119,25 +126,219 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (walletStatus && connectBtn && disconnectBtn) {
       walletStatus.textContent = `${walletName}: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+      walletStatus.classList.add('connected');
       connectBtn.classList.add('hidden');
       disconnectBtn.classList.remove('hidden');
       
       // Auto-analyze connected wallet
-      document.getElementById('address-input').value = address;
-      analyzeAddress();
+      const addressInput = document.getElementById('address-input');
+      if (addressInput) {
+        addressInput.value = address;
+        analyzeAddress();
+      }
     }
   }
 
   // Disconnect wallet
-  document.getElementById('disconnect-btn')?.addEventListener('click', function() {
-    const walletStatus = document.getElementById('wallet-status');
-    const connectBtn = document.getElementById('connect-wallet-btn');
-    const disconnectBtn = document.getElementById('disconnect-btn');
+  const disconnectBtn = document.getElementById('disconnect-btn');
+  if (disconnectBtn) {
+    disconnectBtn.addEventListener('click', function() {
+      const walletStatus = document.getElementById('wallet-status');
+      const connectBtn = document.getElementById('connect-wallet-btn');
+      
+      if (walletStatus && connectBtn) {
+        walletStatus.textContent = 'Not connected';
+        walletStatus.classList.remove('connected');
+        connectBtn.classList.remove('hidden');
+        disconnectBtn.classList.add('hidden');
+        
+        const addressInput = document.getElementById('address-input');
+        if (addressInput) {
+          addressInput.value = '';
+        }
+        clearResults();
+      }
+    });
+  }
 
-    walletStatus.textContent = 'Not connected';
-    connectBtn.classList.remove('hidden');
-    disconnectBtn.classList.add('hidden');
-    document.getElementById('address-input').value = '';
-    clearResults();
-  });
+  // Show error message
+  function showError(message) {
+    const errorElem = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    
+    if (errorElem && errorText) {
+      errorText.textContent = message;
+      errorElem.classList.remove('hidden');
+      
+      setTimeout(() => {
+        errorElem.classList.add('hidden');
+      }, 5000);
+    } else {
+      alert(message);
+    }
+  }
+
+  // Analyze address
+  function analyzeAddress() {
+    const addressInput = document.getElementById('address-input');
+    const loadingElem = document.getElementById('loading');
+    const resultsElem = document.getElementById('results');
+    const errorElem = document.getElementById('error-message');
+    
+    if (!addressInput || !addressInput.value) {
+      showError('Please enter a valid address');
+      return;
+    }
+    
+    const address = addressInput.value.trim();
+    
+    // Hide previous results/errors
+    if (resultsElem) resultsElem.classList.add('hidden');
+    if (errorElem) errorElem.classList.add('hidden');
+    
+    // Show loading
+    if (loadingElem) {
+      loadingElem.classList.remove('hidden');
+      
+      // Setup cancel button
+      const cancelBtn = document.getElementById('cancel-analysis');
+      if (cancelBtn) {
+        cancelBtn.classList.remove('hidden');
+        
+        const cancelHandler = function() {
+          // Cancel logic here
+          loadingElem.classList.add('hidden');
+          cancelBtn.removeEventListener('click', cancelHandler);
+        };
+        
+        cancelBtn.addEventListener('click', cancelHandler);
+      }
+    }
+    
+    // Call API to analyze address
+    fetch(`/api/analyze/${address}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (loadingElem) loadingElem.classList.add('hidden');
+        
+        if (data.success) {
+          displayResults(data);
+        } else {
+          showError(data.error || 'Failed to analyze address');
+        }
+      })
+      .catch(error => {
+        if (loadingElem) loadingElem.classList.add('hidden');
+        showError(error.message);
+        console.error('Analysis error:', error);
+      });
+  }
+
+  // Display results
+  function displayResults(data) {
+    const resultsElem = document.getElementById('results');
+    if (!resultsElem) return;
+    
+    // Update summary metrics
+    document.getElementById('tx-count').textContent = data.summary?.transactionCount || '0';
+    document.getElementById('first-date').textContent = formatDate(data.summary?.firstTransaction) || '-';
+    document.getElementById('chains-count').textContent = data.summary?.uniqueChains || '0';
+    document.getElementById('tokens-count').textContent = data.summary?.uniqueTokens || '0';
+    document.getElementById('total-value-display').textContent = formatCurrency(data.summary?.totalValueUSD) || '$0.00';
+    
+    // Fill tokens table
+    const tokensBody = document.getElementById('tokens-tbody');
+    if (tokensBody) {
+      tokensBody.innerHTML = '';
+      
+      if (data.tokens && data.tokens.length > 0) {
+        data.tokens.forEach(token => {
+          const row = document.createElement('tr');
+          
+          row.innerHTML = `
+            <td>
+              <div class="token-info">
+                <span class="token-symbol">${token.symbol}</span>
+                <span class="token-name">${token.name}</span>
+              </div>
+            </td>
+            <td>${formatNumber(token.amount)}</td>
+            <td>${formatCurrency(token.priceUSD)}</td>
+            <td>${formatCurrency(token.valueUSD)}</td>
+          `;
+          
+          tokensBody.appendChild(row);
+        });
+      } else {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="4" class="no-data">No tokens found</td>';
+        tokensBody.appendChild(row);
+      }
+    }
+    
+    resultsElem.classList.remove('hidden');
+  }
+
+  // Clear results
+  function clearResults() {
+    const resultsElem = document.getElementById('results');
+    if (resultsElem) {
+      resultsElem.classList.add('hidden');
+    }
+  }
+
+  // Format helpers
+  function formatDate(timestamp) {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
+    return date.toLocaleDateString();
+  }
+  
+  function formatNumber(num) {
+    if (!num && num !== 0) return '-';
+    return parseFloat(num).toLocaleString(undefined, {
+      maximumFractionDigits: 6
+    });
+  }
+  
+  function formatCurrency(num) {
+    if (!num && num !== 0) return '-';
+    return '$' + parseFloat(num).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // Initialize UI
+  function initializeUI() {
+    // Check for dark mode preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.classList.add('dark-mode');
+    }
+    
+    // Listen for dark mode changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (e.matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    });
+    
+    // Add input validation for address field
+    const addressInput = document.getElementById('address-input');
+    if (addressInput) {
+      addressInput.addEventListener('input', function() {
+        const analyzeBtn = document.getElementById('analyze-btn');
+        if (analyzeBtn) {
+          analyzeBtn.disabled = !this.value.trim();
+        }
+      });
+    }
+  }
 });
