@@ -60,14 +60,19 @@ document.addEventListener('DOMContentLoaded', () => {
   closeModalBtn.addEventListener('click', hideWalletModal);
   walletModalOverlay.addEventListener('click', hideWalletModal);
   
-  // Event listener for refresh button
-  if (refreshAnalysisBtn) {
-    refreshAnalysisBtn.addEventListener('click', () => {
-      if (currentConnectedAddress) {
-        analyzeAddress(currentConnectedAddress, true); // Force refresh = true
-      }
-    });
-  }
+// Update the refresh button event listener (around line 75)
+if (refreshAnalysisBtn) {
+  refreshAnalysisBtn.addEventListener('click', () => {
+    // Get address from either connected wallet OR manual input
+    const address = currentConnectedAddress || addressInput.value.trim();
+    
+    if (address) {
+      analyzeAddress(address, true); // Force refresh = true
+    } else {
+      alert('No address to refresh. Please connect wallet or enter an address.');
+    }
+  });
+}
   
   // Functions to show/hide wallet modal
   function showWalletModal() {
@@ -487,6 +492,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Format and display total value
     totalValueDisplay.textContent = formatUSD(data.summary.totalUSDValue);
+	
+	  // *** ADD THIS: Show refresh button after successful analysis ***
+  if (refreshAnalysisBtn) {
+    refreshAnalysisBtn.classList.remove('hidden');
+  }
     
     // Clear previous tokens table
     tokensTableBody.innerHTML = '';
@@ -579,6 +589,10 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsSection.classList.add('hidden');
     errorSection.classList.add('hidden');
     
+	  // *** ADD THIS: Hide refresh button when clearing results ***
+  if (refreshAnalysisBtn) {
+    refreshAnalysisBtn.classList.add('hidden');
+  }
     // Remove any existing cache indicators
     const existingIndicator = document.querySelector('.cache-indicator');
     if (existingIndicator) {
