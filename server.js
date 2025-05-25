@@ -51,7 +51,7 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Add this near the top of your server.js file - Cache Control
+// Cache Control
 app.use((req, res, next) => {
   res.header('Cache-Control', 'no-store, max-age=0');
   res.header('Pragma', 'no-cache');
@@ -145,31 +145,28 @@ app.use(compression({
 // Enhanced rate limiting (Updated for v7.5.0)
 const limiter = rateLimit({
   windowMs: config.RATE_LIMIT.WINDOW_MS,
-  limit: config.RATE_LIMIT.MAX_REQUESTS, // "max" is now "limit"
+  limit: config.RATE_LIMIT.MAX_REQUESTS,
   message: {
     error: 'Too many requests from this IP, please try again later.',
     code: 'RATE_LIMIT',
     retryAfter: config.RATE_LIMIT.WINDOW_MS / 1000
   },
-  headers: true, // "standardHeaders" is now just "headers"
-  // legacyHeaders is removed in v7+
+  headers: true,
   skipSuccessfulRequests: false,
   skip: (req) => {
-    // Skip rate limiting for health checks
     return req.url === '/health';
   }
 });
 
 const analysisLimiter = rateLimit({
   windowMs: config.RATE_LIMIT.ANALYSIS_WINDOW_MS,
-  limit: config.RATE_LIMIT.ANALYSIS_MAX_REQUESTS, // "max" is now "limit"
+  limit: config.RATE_LIMIT.ANALYSIS_MAX_REQUESTS,
   message: {
     error: 'Too many analysis requests, please try again later.',
     code: 'ANALYSIS_RATE_LIMIT',
     retryAfter: config.RATE_LIMIT.ANALYSIS_WINDOW_MS / 1000
   },
-  headers: true, // "standardHeaders" is now just "headers"
-  // Remove legacyHeaders
+  headers: true
 });
 
 // Request timeout middleware
@@ -259,7 +256,7 @@ app.use('/api/', (req, res, next) => {
   next();
 });
 
-// Health check endpoint - Express 5 style without callbacks
+// Health check endpoint
 app.get('/health', (req, res) => {
   const healthcheck = {
     status: 'ok',
@@ -277,10 +274,10 @@ app.get('/health', (req, res) => {
   res.json(healthcheck);
 });
 
-// API endpoint to analyze an address - Express 5 async/await style
+// API endpoint to analyze an address - WITH FORCE REFRESH SUPPORT
 app.post('/api/analyze', analysisLimiter, async (req, res) => {
   const startTime = Date.now();
-  const { address } = req.body;
+  const { address, forceRefresh = false } = req.body;
   
   try {  
     // Enhanced address validation
@@ -306,22 +303,31 @@ app.post('/api/analyze', analysisLimiter, async (req, res) => {
       });
     }
     
-    logger.info('Starting analysis for address:', { address: trimmedAddress, ip: req.ip });
+    logger.info('Starting analysis for address:', { 
+      address: trimmedAddress, 
+      forceRefresh,
+      ip: req.ip 
+    });
     
-    const results = await analysisModule.analyzeAddress(trimmedAddress);
+    // Pass forceRefresh option to analysis module
+    const results = await analysisModule.analyzeAddress(trimmedAddress, { 
+      forceRefresh: forceRefresh === true || forceRefresh === 'true' 
+    });
     
     const duration = Date.now() - startTime;
     logger.info('Analysis completed successfully', { 
       address: trimmedAddress, 
       duration: `${duration}ms`,
-      transactionCount: results.summary?.transactionCount || 0
+      transactionCount: results.summary?.transactionCount || 0,
+      fromCache: !forceRefresh
     });
     
     res.json({
       ...results,
       metadata: {
         analyzedAt: new Date().toISOString(),
-        duration: duration
+        duration: duration,
+        fromCache: !forceRefresh
       }
     });
   } catch (error) {
@@ -365,77 +371,19 @@ app.post('/api/analyze', analysisLimiter, async (req, res) => {
   }
 });
 
-// API endpoint to verify eligibility for NFT minting - Express 5 style
-app.post('/api/verify-eligibility', analysisLimiter, async (req, res) => {
-  try {
-    const { address } = req.body;
-    
-    if (!address || typeof address !== 'string' || address.trim().length === 0) {
-      logger.warn('Invalid address for eligibility check:', { address, ip: req.ip });
-      return res.status(400).json({
-        eligible: false,
-        error: 'Valid address is required',
-        code: 'INVALID_ADDRESS'
-      });
-    }
-    
-    const trimmedAddress = address.trim();
-    logger.info('Checking eligibility for:', { address: trimmedAddress, ip: req.ip });
-    
-    const analysisResult = await analysisModule.analyzeAddress(trimmedAddress);
-    
-    if (analysisResult.success) {
-      const transactionCount = analysisResult.summary.transactionCount;
-      const eligible = transactionCount >= config.NFT_ELIGIBILITY_THRESHOLD;
-      
-      logger.info(`Eligibility check completed`, { 
-        address: trimmedAddress,
-        eligible,
-        transactionCount,
-        threshold: config.NFT_ELIGIBILITY_THRESHOLD
-      });
-      
-      return res.json({
-        eligible: eligible,
-        transactionCount: transactionCount,
-        requiredCount: config.NFT_ELIGIBILITY_THRESHOLD,
-        checkedAt: new Date().toISOString()
-      });
-    }
-    
-    logger.warn('Analysis failed for eligibility check:', trimmedAddress);
-    return res.json({
-      eligible: false,
-      error: 'Failed to analyze transactions',
-      transactionCount: 0,
-      code: 'ANALYSIS_FAILED'
-    });
-    
-  } catch (error) {
-    logger.error('Eligibility check error:', { error: error.message, address: req.body?.address });
-    res.status(500).json({
-      eligible: false,
-      error: 'Internal server error',
-      transactionCount: 0,
-      code: 'INTERNAL_ERROR'
-    });
-  }
-});
-
-// Serve the main page - Express 5 style
+// Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API documentation endpoint - Express 5 style
+// API documentation endpoint
 app.get('/api', (req, res) => {
   res.json({
     name: 'Relay Stats API',
     version: '1.0.0',
     endpoints: {
       '/health': 'GET - Health check',
-      '/api/analyze': 'POST - Analyze wallet address',
-      '/api/verify-eligibility': 'POST - Check NFT eligibility'
+      '/api/analyze': 'POST - Analyze wallet address (supports forceRefresh parameter)'
     },
     documentation: 'https://github.com/Love4crypto/relay-stats-app'
   });
@@ -448,7 +396,7 @@ app.use((req, res) => {
     error: 'Route not found',
     code: 'NOT_FOUND',
     path: req.originalUrl,
-    availableEndpoints: ['/health', '/api/analyze', '/api/verify-eligibility']
+    availableEndpoints: ['/health', '/api/analyze']
   });
 });
 
@@ -477,20 +425,17 @@ app.use((err, req, res, next) => {
 function gracefulShutdown(signal) {
   logger.info(`${signal} received, shutting down gracefully`);
   
-  // Cancel scheduled job
   if (job) {
     job.cancel();
     logger.info('Scheduled jobs cancelled');
   }
   
-  // Close server
   process.exit(0);
 }
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', err);
   process.exit(1);
