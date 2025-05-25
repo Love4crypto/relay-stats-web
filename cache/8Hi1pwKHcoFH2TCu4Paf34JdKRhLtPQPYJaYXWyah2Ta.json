@@ -1,5 +1,5 @@
 {
-  "timestamp": 1748207022022,
+  "timestamp": 1748211638851,
   "transactions": [
     {
       "id": "0xc3277081f6569be02a26495aed5c17da8ac78c2ff0a8cc95c647d13b5aa67bde",
@@ -94,7 +94,7 @@
             "amount": "765000000",
             "amountFormatted": "765.0",
             "amountUsd": "765.037485",
-            "amountUsdCurrent": "764.869950",
+            "amountUsdCurrent": "764.869185",
             "minimumAmount": "765000000"
           },
           "currencyOut": {
@@ -112,7 +112,7 @@
             "amount": "285822065",
             "amountFormatted": "0.285822065",
             "amountUsd": "760.561012",
-            "amountUsdCurrent": "721.672435",
+            "amountUsdCurrent": "725.123423",
             "minimumAmount": "285822065"
           },
           "rate": "0.000373623614379085"
@@ -311,7 +311,7 @@
             "amount": "10000000",
             "amountFormatted": "0.01",
             "amountUsd": "18.331300",
-            "amountUsdCurrent": "25.249011",
+            "amountUsdCurrent": "25.369750",
             "minimumAmount": "10000000"
           },
           "currencyOut": {
@@ -329,7 +329,7 @@
             "amount": "9688480000000000",
             "amountFormatted": "0.00968848",
             "amountUsd": "17.773652",
-            "amountUsdCurrent": "24.463548",
+            "amountUsdCurrent": "24.579431",
             "minimumAmount": "9688480000000000"
           },
           "rate": "0.9688479999999999"
@@ -498,7 +498,7 @@
             "amount": "290000000",
             "amountFormatted": "0.29",
             "amountUsd": "514.630538",
-            "amountUsdCurrent": "732.221308",
+            "amountUsdCurrent": "735.722740",
             "minimumAmount": "290000000"
           },
           "currencyOut": {
@@ -516,7 +516,7 @@
             "amount": "284697152000000000",
             "amountFormatted": "0.284697152",
             "amountUsd": "505.220168",
-            "amountUsdCurrent": "718.864302",
+            "amountUsdCurrent": "722.269547",
             "minimumAmount": "284697152000000000"
           },
           "rate": "0.9817143172413794"
@@ -662,7 +662,7 @@
             "amount": "600000000",
             "amountFormatted": "600.0",
             "amountUsd": "600.004800",
-            "amountUsdCurrent": "599.898000",
+            "amountUsdCurrent": "599.897400",
             "minimumAmount": "600000000"
           },
           "currencyOut": {
@@ -680,7 +680,7 @@
             "amount": "328182808",
             "amountFormatted": "0.328182808",
             "amountUsd": "596.642749",
-            "amountUsdCurrent": "828.629120",
+            "amountUsdCurrent": "832.591568",
             "minimumAmount": "328182808"
           },
           "rate": "0.0005469713466666667"
@@ -854,7 +854,7 @@
             "amount": "10000000000000000",
             "amountFormatted": "0.01",
             "amountUsd": "18.120116",
-            "amountUsdCurrent": "25.250140",
+            "amountUsdCurrent": "25.369750",
             "minimumAmount": "10000000000000000"
           },
           "currencyOut": {
@@ -872,7 +872,7 @@
             "amount": "9999796",
             "amountFormatted": "0.009999796",
             "amountUsd": "18.119746",
-            "amountUsdCurrent": "25.248496",
+            "amountUsdCurrent": "25.369232",
             "minimumAmount": "9999796"
           },
           "rate": "0.9999796"
@@ -1071,7 +1071,7 @@
             "amount": "17000000",
             "amountFormatted": "0.017",
             "amountUsd": "31.172388",
-            "amountUsdCurrent": "42.923318",
+            "amountUsdCurrent": "43.128574",
             "minimumAmount": "17000000"
           },
           "currencyOut": {
@@ -1089,7 +1089,7 @@
             "amount": "16667116000000000",
             "amountFormatted": "0.016667116",
             "amountUsd": "30.561988",
-            "amountUsdCurrent": "42.084702",
+            "amountUsdCurrent": "42.284056",
             "minimumAmount": "16667116000000000"
           },
           "rate": "0.980418588235294"
@@ -1258,7 +1258,7 @@
             "amount": "315000000",
             "amountFormatted": "0.315",
             "amountUsd": "563.288497",
-            "amountUsdCurrent": "795.343834",
+            "amountUsdCurrent": "799.147114",
             "minimumAmount": "315000000"
           },
           "currencyOut": {
@@ -1276,7 +1276,7 @@
             "amount": "309249379000000000",
             "amountFormatted": "0.309249379",
             "amountUsd": "553.005136",
-            "amountUsdCurrent": "780.859020",
+            "amountUsdCurrent": "784.557932",
             "minimumAmount": "309249379000000000"
           },
           "rate": "0.9817440603174603"
@@ -1445,7 +1445,7 @@
             "amount": "3512851",
             "amountFormatted": "0.003512851",
             "amountUsd": "6.336027",
-            "amountUsdCurrent": "8.869601",
+            "amountUsdCurrent": "8.912015",
             "minimumAmount": "3512851"
           },
           "currencyOut": {
@@ -1463,7 +1463,7 @@
             "amount": "3449023000000000",
             "amountFormatted": "0.003449023",
             "amountUsd": "6.220902",
-            "amountUsdCurrent": "8.708831",
+            "amountUsdCurrent": "8.750999",
             "minimumAmount": "3449023000000000"
           },
           "rate": "0.9818301430945975"
@@ -1632,7 +1632,7 @@
             "amount": "17564307",
             "amountFormatted": "0.017564307",
             "amountUsd": "31.678921",
-            "amountUsdCurrent": "44.348137",
+            "amountUsdCurrent": "44.560207",
             "minimumAmount": "17564307"
           },
           "currencyOut": {
@@ -1650,7 +1650,7 @@
             "amount": "17217105000000000",
             "amountFormatted": "0.017217105",
             "amountUsd": "31.053991",
-            "amountUsdCurrent": "43.473432",
+            "amountUsdCurrent": "43.679364",
             "minimumAmount": "17217105000000000"
           },
           "rate": "0.9802325249723771"
@@ -1794,7 +1794,7 @@
             "amount": "50000000000000000",
             "amountFormatted": "0.05",
             "amountUsd": "89.618774",
-            "amountUsdCurrent": "126.250701",
+            "amountUsdCurrent": "126.848748",
             "minimumAmount": "50000000000000000"
           },
           "currencyOut": {
@@ -1812,7 +1812,7 @@
             "amount": "49999701",
             "amountFormatted": "0.049999701",
             "amountUsd": "89.576419",
-            "amountUsdCurrent": "126.244298",
+            "amountUsdCurrent": "126.847990",
             "minimumAmount": "49999701"
           },
           "rate": "0.9999940199999999"
@@ -1986,7 +1986,7 @@
             "amount": "350000000000000000",
             "amountFormatted": "0.35",
             "amountUsd": "632.026293",
-            "amountUsdCurrent": "883.754909",
+            "amountUsdCurrent": "887.941237",
             "minimumAmount": "350000000000000000"
           },
           "currencyOut": {
@@ -2004,7 +2004,7 @@
             "amount": "349999701",
             "amountFormatted": "0.349999701",
             "amountUsd": "632.025754",
-            "amountUsdCurrent": "883.714616",
+            "amountUsdCurrent": "887.940479",
             "minimumAmount": "349999701"
           },
           "rate": "0.9999991457142857"
@@ -2414,7 +2414,7 @@
             "amount": "140000000",
             "amountFormatted": "0.14",
             "amountUsd": "26.994100",
-            "amountUsdCurrent": "24.080456",
+            "amountUsdCurrent": "24.287553",
             "minimumAmount": "140000000"
           },
           "currencyOut": {
@@ -2432,7 +2432,7 @@
             "amount": "10069940879973112",
             "amountFormatted": "0.010069940879973112",
             "amountUsd": "26.897836",
-            "amountUsdCurrent": "25.426742",
+            "amountUsdCurrent": "25.547188",
             "minimumAmount": "10069940879973112"
           },
           "rate": "0.07192814914266507"
@@ -3511,7 +3511,7 @@
             "amount": "790000000",
             "amountFormatted": "0.79",
             "amountUsd": "171.753900",
-            "amountUsdCurrent": "135.882573",
+            "amountUsdCurrent": "137.051191",
             "minimumAmount": "790000000"
           },
           "currencyOut": {
@@ -3530,7 +3530,7 @@
             "amount": "297731956490260684963",
             "amountFormatted": "297.731956490260684963",
             "amountUsd": "172.063764",
-            "amountUsdCurrent": "68.835926",
+            "amountUsdCurrent": "69.315870",
             "minimumAmount": "297731956490260684963"
           },
           "rate": "376.87589429146925"
@@ -3970,7 +3970,7 @@
             "amount": "150000000",
             "amountFormatted": "0.15",
             "amountUsd": "32.611500",
-            "amountUsdCurrent": "25.800489",
+            "amountUsdCurrent": "26.022378",
             "minimumAmount": "150000000"
           },
           "currencyOut": {
@@ -3988,7 +3988,7 @@
             "amount": "6892299503371132",
             "amountFormatted": "0.006892299503371132",
             "amountUsd": "27.216519",
-            "amountUsdCurrent": "17.403153",
+            "amountUsdCurrent": "17.485591",
             "minimumAmount": "6892299503371132"
           },
           "rate": "0.04594866335580755"

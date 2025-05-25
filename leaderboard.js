@@ -70,9 +70,25 @@ function initializeDatabase() {
 }
 
 // Update user stats (without circular dependency)
+// Replace the updateUserStats function with this:
+
 async function updateUserStats(address, autoOptIn = false) {
   return new Promise((resolve, reject) => {
     try {
+      // ⚠️ CRITICAL FIX: Only normalize Ethereum addresses, preserve Solana case
+      let normalizedAddress;
+      if (address.startsWith('0x')) {
+        // Ethereum addresses can be lowercased
+        normalizedAddress = address.toLowerCase();
+      } else {
+        // Solana addresses are case-sensitive - keep original case
+        normalizedAddress = address;
+      }
+      
+      console.log('📊 Updating user stats...');
+      console.log('Original address:', address);
+      console.log('Normalized address:', normalizedAddress);
+      
       // Get current analysis data from cache or API
       const analysis = require('./analysis');
       
@@ -87,7 +103,7 @@ async function updateUserStats(address, autoOptIn = false) {
           }
 
           const stats = {
-            address: address.toLowerCase(),
+            address: normalizedAddress, // ✅ Use normalized address (preserves Solana case)
             transaction_count: result.summary.transactionCount,
             total_usd_value: result.summary.totalUSDValue || 0,
             unique_chains: result.summary.uniqueChains || 0,
@@ -125,7 +141,7 @@ async function updateUserStats(address, autoOptIn = false) {
               return reject(err);
             }
 
-            console.log(`✅ User stats updated for ${address} (opted in: ${autoOptIn})`);
+            console.log(`✅ User stats updated for ${normalizedAddress} (opted in: ${autoOptIn})`);
             
             resolve({
               success: true,
@@ -197,10 +213,102 @@ async function getLeaderboard(type = 'transactions', limit = 50) {
   });
 }
 
+// Replace the getLeaderboardPaginated function with this corrected version:
+
+async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = null) {
+  return new Promise((resolve, reject) => {
+    const validTypes = {
+      'transactions': 'transaction_count',
+      'volume': 'total_usd_value', 
+      'chains': 'unique_chains',
+      'tokens': 'unique_tokens'
+    };
+
+    const column = validTypes[type];
+    if (!column) {
+      return reject(new Error('Invalid leaderboard type'));
+    }
+
+    try {
+      let whereClause = 'WHERE opt_in_leaderboard = 1'; // Fixed: was 'opted_in'
+      let params = [];
+      
+      // Add search functionality
+      if (search) {
+        whereClause += ' AND address LIKE ?';
+        params.push(`%${search}%`);
+      }
+
+      // Get total count for pagination
+      const countQuery = `SELECT COUNT(*) as total FROM user_stats ${whereClause}`;
+      
+      db.get(countQuery, params, (err, countResult) => {
+        if (err) {
+          return reject(err);
+        }
+        
+        const total = countResult.total;
+
+        // Get paginated data
+        const dataQuery = `
+          SELECT 
+            address,
+            transaction_count,
+            total_usd_value,
+            unique_chains,
+            unique_tokens,
+            first_transaction_date,
+            last_updated,
+            ROW_NUMBER() OVER (ORDER BY ${column} DESC) as rank
+          FROM user_stats 
+          ${whereClause}
+          ORDER BY ${column} DESC 
+          LIMIT ? OFFSET ?
+        `;
+        
+        const dataParams = [...params, limit, offset];
+        
+        db.all(dataQuery, dataParams, (err, users) => {
+          if (err) {
+            return reject(err);
+          }
+
+          resolve({
+            data: users.map(user => ({
+              ...user,
+              rank: user.rank,
+              total_usd_value: parseFloat(user.total_usd_value) || 0
+            })),
+            total: total
+          });
+        });
+      });
+
+    } catch (error) {
+      console.error('Database error in getLeaderboardPaginated:', error);
+      reject(error);
+    }
+  });
+}
+
 // Get user rank
+// Replace the getUserRank function with this:
+
 async function getUserRank(address) {
   return new Promise((resolve, reject) => {
-    const normalizedAddress = address.toLowerCase();
+    // ⚠️ CRITICAL FIX: Only normalize Ethereum addresses, preserve Solana case
+    let normalizedAddress;
+    if (address.startsWith('0x')) {
+      // Ethereum addresses can be lowercased
+      normalizedAddress = address.toLowerCase();
+    } else {
+      // Solana addresses are case-sensitive - keep original case
+      normalizedAddress = address;
+    }
+    
+    console.log('🎯 Getting user rank...');
+    console.log('Original address:', address);
+    console.log('Normalized address:', normalizedAddress);
     
     // First check if user exists in database
     db.get(
@@ -274,10 +382,24 @@ async function getUserRank(address) {
   });
 }
 
-// Update opt-in status
+// Replace the updateOptInStatus function (around line 250) with this:
+
 async function updateOptInStatus(address, optIn) {
   return new Promise((resolve, reject) => {
-    const normalizedAddress = address.toLowerCase();
+    // ⚠️ CRITICAL: Only normalize Ethereum addresses, preserve Solana case
+    let normalizedAddress;
+    if (address.startsWith('0x')) {
+      // Ethereum addresses can be lowercased
+      normalizedAddress = address.toLowerCase();
+    } else {
+      // Solana addresses are case-sensitive - keep original case
+      normalizedAddress = address;
+    }
+    
+    console.log('🔄 Updating opt-in status...');
+    console.log('Original address:', address);
+    console.log('Normalized address:', normalizedAddress);
+    console.log('Opt-in value:', optIn);
     
     // First check if user exists
     db.get(
@@ -342,6 +464,7 @@ module.exports = {
   initializeDatabase,
   updateUserStats,
   getLeaderboard,
+  getLeaderboardPaginated, // Fixed: removed extra space
   getUserRank,
   updateOptInStatus
 };

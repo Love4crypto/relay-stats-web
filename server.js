@@ -13,6 +13,8 @@ const analysisModule = require('./analysis');
 // Signature verification dependencies
 const { ethers } = require('ethers');
 const nacl = require('tweetnacl');
+
+
 // Replace the bs58 import section (around lines 15-100) with this corrected version:
 
 // Enhanced bs58 import with working fallback
@@ -195,59 +197,116 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Signature verification functions
-// Updated signature verification functions for ethers v6
-function verifyEthereumSignature(address, message, signature) {
+// ==================== SIGNATURE VERIFICATION FUNCTIONS ====================
+
+// Replace the signature verification functions (around lines 250-350) with these:
+
+function validateSignatureMessage(message, address, action, maxAge = 10 * 60 * 1000) {
   try {
-    // For ethers v6, use verifyMessage directly from ethers
-    const recoveredAddress = ethers.verifyMessage(message, signature);
-    return recoveredAddress.toLowerCase() === address.toLowerCase();
-  } catch (error) {
-    console.error('Ethereum signature verification error:', error);
+    console.log('📝 Validating message format...');
     
-    // Fallback for ethers v5 if v6 fails
-    try {
-      if (ethers.utils && ethers.utils.verifyMessage) {
-        const recoveredAddress = ethers.utils.verifyMessage(message, signature);
-        return recoveredAddress.toLowerCase() === address.toLowerCase();
-      }
-    } catch (fallbackError) {
-      console.error('Ethereum signature verification fallback error:', fallbackError);
+    // Check if message contains required components
+    if (!message.includes('Relay Stats Leaderboard')) {
+      console.log('❌ Missing app identifier');
+      return { valid: false, error: 'Invalid message format - missing app identifier' };
     }
     
+    if (!message.includes(address)) {
+      console.log('❌ Address mismatch in message');
+      return { valid: false, error: 'Invalid message format - address mismatch' };
+    }
+    
+    if (!message.includes(action)) {
+      console.log('❌ Action mismatch in message');
+      return { valid: false, error: 'Invalid message format - action mismatch' };
+    }
+    
+    // Extract timestamp from message
+    const timestampMatch = message.match(/Timestamp: (\d+)/);
+    if (timestampMatch) {
+      const messageTimestamp = parseInt(timestampMatch[1]);
+      const now = Date.now();
+      const age = now - messageTimestamp;
+      
+      console.log('Message age:', age, 'ms (max allowed:', maxAge, 'ms)');
+      
+      if (age > maxAge) {
+        console.log('❌ Message expired');
+        return { valid: false, error: 'Message expired. Please generate a new signature.' };
+      }
+    }
+    
+    console.log('✅ Message format validation passed');
+    return { valid: true };
+  } catch (error) {
+    console.error('Message validation error:', error);
+    return { valid: false, error: 'Message validation failed' };
+  }
+}
+
+function verifyEthereumSignature(address, message, signature) {
+  try {
+    console.log('🔐 Verifying Ethereum signature...');
+    console.log('Address:', address);
+    console.log('Message length:', message.length);
+    console.log('Signature sample:', signature.substring(0, 20) + '...');
+    
+    // Use ethers v6 syntax (falls back to v5 if needed)
+    let recoveredAddress;
+    
+    try {
+      // Try ethers v6 first
+      recoveredAddress = ethers.verifyMessage(message, signature);
+    } catch (v6Error) {
+      console.log('Ethers v6 failed, trying v5...', v6Error.message);
+      try {
+        // Fallback to ethers v5
+        recoveredAddress = ethers.utils.verifyMessage(message, signature);
+      } catch (v5Error) {
+        console.error('Both ethers v6 and v5 failed:', v5Error.message);
+        throw new Error('Signature verification failed');
+      }
+    }
+    
+    console.log('Recovered address:', recoveredAddress);
+    console.log('Expected address:', address);
+    
+    const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
+    console.log('Ethereum signature valid:', isValid);
+    
+    return isValid;
+  } catch (error) {
+    console.error('Ethereum signature verification error:', error);
     return false;
   }
 }
 
-// Replace the verifySolanaSignature function (around line 176):
-
-function verifySolanaSignature(address, message, signature) {
+function verifySolanaSignature(originalAddress, message, signature) {
   try {
     console.log('🔐 Verifying Solana signature...');
-    console.log('Address:', address);
+    console.log('Original address:', originalAddress);
     console.log('Message length:', message.length);
     console.log('Signature length:', signature.length);
-    console.log('bs58 type:', typeof bs58);
-    console.log('bs58.decode type:', typeof bs58.decode);
     
+    // ⚠️ CRITICAL: Do NOT lowercase Solana addresses - they are case-sensitive!
+    const address = originalAddress; // Keep original case
+    
+    // Convert message to bytes
     const messageBytes = new TextEncoder().encode(message);
+    console.log('Message bytes length:', messageBytes.length);
+    
     let signatureBytes;
     let publicKeyBytes;
     
-    // Decode public key (address) with enhanced error handling
+    // Decode public key (address) with error handling - PRESERVE CASE
     try {
-      console.log('🔍 Attempting to decode Solana address...');
-      
-      if (!bs58) {
-        throw new Error('bs58 object not available');
+      if (!bs58 || typeof bs58.decode !== 'function') {
+        throw new Error('bs58 decoder not available');
       }
       
-      if (typeof bs58.decode !== 'function') {
-        throw new Error(`bs58.decode is not a function (type: ${typeof bs58.decode})`);
-      }
-      
+      console.log('🔍 Decoding Solana address (case-sensitive):', address);
       publicKeyBytes = bs58.decode(address);
-      console.log('✅ Public key decoded successfully, length:', publicKeyBytes.length);
+      console.log('✅ Public key decoded, length:', publicKeyBytes.length);
       
       if (publicKeyBytes.length !== 32) {
         throw new Error(`Invalid public key length: ${publicKeyBytes.length}, expected 32`);
@@ -255,60 +314,52 @@ function verifySolanaSignature(address, message, signature) {
       
     } catch (addressError) {
       console.error('❌ Failed to decode Solana address:', addressError);
-      console.error('Address value:', address);
-      console.error('Address type:', typeof address);
-      console.error('Address length:', address?.length);
+      console.error('Address that failed:', address);
+      console.error('Address length:', address.length);
+      console.error('Address characters check:', address.split('').map(c => ({ char: c, code: c.charCodeAt(0) })));
       return false;
     }
     
-    // Try to decode signature - first as base58, then base64
+    // Decode signature with multiple format support
     try {
-      console.log('🔍 Attempting to decode signature...');
-      
-      // Try base58 decoding first
+      // First try base58 decoding
       signatureBytes = bs58.decode(signature);
       console.log('✅ Signature decoded as base58, length:', signatureBytes.length);
       
     } catch (base58Error) {
-      console.log('⚠️ Base58 decode failed, trying base64:', base58Error.message);
+      console.log('⚠️ Base58 decode failed, trying base64...');
       try {
-        // Fallback to base64 decoding
-        const base64Decoded = Buffer.from(signature, 'base64');
-        signatureBytes = new Uint8Array(base64Decoded);
+        // Fallback to base64
+        const base64Buffer = Buffer.from(signature, 'base64');
+        signatureBytes = new Uint8Array(base64Buffer);
         console.log('✅ Signature decoded as base64, length:', signatureBytes.length);
       } catch (base64Error) {
-        console.error('❌ Both base58 and base64 decoding failed:', base64Error);
-        console.error('Signature sample:', signature.substring(0, 50) + '...');
+        console.error('❌ Both base58 and base64 decoding failed');
+        console.error('Signature:', signature);
         return false;
       }
     }
     
-    // Verify signature length (should be 64 bytes for Ed25519)
+    // Verify signature length (Ed25519 signatures are 64 bytes)
     if (signatureBytes.length !== 64) {
       console.error('❌ Invalid signature length:', signatureBytes.length, 'expected 64');
       return false;
     }
     
-    // Perform signature verification
+    // Verify using tweetnacl
     console.log('🔍 Performing nacl signature verification...');
-    console.log('Message bytes length:', messageBytes.length);
-    console.log('Signature bytes length:', signatureBytes.length);
-    console.log('Public key bytes length:', publicKeyBytes.length);
+    
+    if (!nacl || typeof nacl.sign.detached.verify !== 'function') {
+      console.error('❌ tweetnacl not available');
+      return false;
+    }
     
     const isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
     console.log('🎯 Solana signature verification result:', isValid);
     
-    if (!isValid) {
-      console.log('❌ Signature verification failed');
-      console.log('Message sample:', message.substring(0, 100) + '...');
-      console.log('Signature sample:', signature.substring(0, 20) + '...');
-      console.log('Address:', address);
-    }
-    
     return isValid;
   } catch (error) {
     console.error('💥 Solana signature verification error:', error);
-    console.error('Error stack:', error.stack);
     return false;
   }
 }
@@ -666,30 +717,53 @@ app.post('/api/analyze', analysisLimiter, async (req, res) => {
 
 if (leaderboard) {
   // Get leaderboard by type (no authentication required for viewing)
-  app.get('/api/leaderboard/:type', async (req, res) => {
-    try {
-      const { type } = req.params;
-      const limit = parseInt(req.query.limit) || 50;
-      
-      console.log(`📊 Fetching ${type} leaderboard (limit: ${limit})`);
-      
-      const result = await leaderboard.getLeaderboard(type, limit);
-      
-      res.json({
-        success: true,
-        leaderboard: result,
-        type: type,
-        limit: limit
-      });
-    } catch (error) {
-      console.error('Leaderboard fetch error:', error);
-      logger.error('Leaderboard fetch error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch leaderboard data'
-      });
-    }
-  });
+app.get('/api/leaderboard/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    
+    // Enhanced pagination parameters
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(10, parseInt(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+    
+    // Optional search parameter
+    const search = req.query.search ? req.query.search.trim() : null;
+    
+    console.log(`📊 Fetching ${type} leaderboard (page: ${page}, limit: ${limit}, search: ${search || 'none'})`);
+    
+    // Get leaderboard data with pagination
+    const result = await leaderboard.getLeaderboardPaginated(type, limit, offset, search);
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(result.total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    
+    res.json({
+      success: true,
+      leaderboard: result.data,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalUsers: result.total,
+        limit: limit,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage,
+        nextPage: hasNextPage ? page + 1 : null,
+        prevPage: hasPrevPage ? page - 1 : null
+      },
+      type: type,
+      search: search
+    });
+  } catch (error) {
+    console.error('Leaderboard fetch error:', error);
+    logger.error('Leaderboard fetch error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch leaderboard data'
+    });
+  }
+});
 
   // Get user rank (no authentication required for viewing)
   app.get('/api/user-rank/:address', async (req, res) => {
@@ -714,132 +788,195 @@ if (leaderboard) {
     }
   });
 
-  // Generate signature message for leaderboard actions
-  app.post('/api/leaderboard/get-signature-message', async (req, res) => {
-    try {
-      const { address, action } = req.body; // action: 'join' or 'leave'
+// Get signature message for leaderboard opt-in/out
+app.post('/api/leaderboard/get-signature-message', (req, res) => {
+  try {
+    const { address, action } = req.body;
+    
+    if (!address || !action) {
+      return res.json({
+        success: false,
+        error: 'Address and action are required'
+      });
+    }
+    
+    const timestamp = Date.now();
+    const nonce = Math.random().toString(36).substr(2, 9);
+    
+    // Create a consistent message format
+    const message = `Relay Stats Leaderboard ${action === 'join' ? 'Join' : 'Leave'} Request
+
+Address: ${address}
+Action: ${action}
+Timestamp: ${timestamp}
+Nonce: ${nonce}
+
+By signing this message, I confirm that I want to ${action} the Relay Stats leaderboard.`;
+
+    console.log('Generated signature message:', message);
+    
+    res.json({
+      success: true,
+      message: message,
+      timestamp: timestamp,
+      nonce: nonce
+    });
+    
+  } catch (error) {
+    console.error('Error generating signature message:', error);
+    res.json({
+      success: false,
+      error: 'Failed to generate signature message'
+    });
+  }
+});
+// ==================== COMPLETE UPDATE OPT-IN ENDPOINT ====================
+
+// Replace your entire update-opt-in endpoint with this:
+// Replace the update-opt-in endpoint with this corrected version:
+
+app.post('/api/leaderboard/update-opt-in', async (req, res) => {
+  try {
+    console.log('=== LEADERBOARD OPT-IN REQUEST ===');
+    const { address, optIn, signature, message, timestamp, nonce } = req.body;
+    
+    console.log('Request details:');
+    console.log('- Address:', address);
+    console.log('- Opt In:', optIn);
+    console.log('- Has signature:', !!signature);
+    console.log('- Has message:', !!message);
+    console.log('- Timestamp:', timestamp);
+    console.log('- Nonce:', nonce);
+    
+    // === VALIDATION ===
+    if (!address || typeof optIn !== 'boolean' || !signature || !message) {
+      console.log('❌ Missing required fields');
+      return res.json({
+        success: false,
+        error: 'Missing required fields: address, optIn, signature, message'
+      });
+    }
+    
+    // ⚠️ CRITICAL FIX: Only normalize Ethereum addresses, preserve Solana case
+    let normalizedAddress;
+    if (address.startsWith('0x')) {
+      // Ethereum addresses can be lowercased
+      normalizedAddress = address.toLowerCase();
+    } else {
+      // Solana addresses are case-sensitive - keep original case
+      normalizedAddress = address;
+    }
+    
+    const action = optIn ? 'join' : 'leave';
+    
+    console.log('Original address:', address);
+    console.log('Normalized address:', normalizedAddress);
+    console.log('Address type:', address.startsWith('0x') ? 'Ethereum' : 'Solana');
+    
+    // === MESSAGE FORMAT VALIDATION ===
+    const messageValidation = validateSignatureMessage(message, address, action);
+    
+    if (!messageValidation.valid) {
+      console.log('❌ Message validation failed:', messageValidation.error);
+      return res.json({
+        success: false,
+        error: messageValidation.error
+      });
+    }
+    
+    // === SIGNATURE VERIFICATION ===
+    console.log('🔐 Starting signature verification...');
+    let isValidSignature = false;
+    
+    if (address.startsWith('0x')) {
+      // Ethereum signature verification
+      console.log('📍 Verifying Ethereum signature...');
+      isValidSignature = verifyEthereumSignature(address, message, signature);
+    } else {
+      // Solana signature verification - use original address (case-sensitive)
+      console.log('📍 Verifying Solana signature...');
+      isValidSignature = verifySolanaSignature(address, message, signature);
+    }
+    
+    if (!isValidSignature) {
+      console.log('❌ Signature verification failed');
+      return res.json({
+        success: false,
+        error: 'Invalid signature. Please try signing the message again.'
+      });
+    }
+    
+    console.log('✅ Signature verification passed');
+    
+    // === DATABASE OPERATIONS ===
+    console.log('💾 Updating database...');
+    
+    // Update opt-in status using the leaderboard module
+    const result = await leaderboard.updateOptInStatus(normalizedAddress, optIn);
+    
+    if (result.success) {
+      console.log(`✅ User ${normalizedAddress} ${optIn ? 'joined' : 'left'} leaderboard`);
       
-      if (!address || !action) {
-        return res.status(400).json({
-          success: false,
-          error: 'Address and action are required'
-        });
-      }
-
-      if (!['join', 'leave'].includes(action)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Action must be either "join" or "leave"'
-        });
-      }
-
-      const timestamp = Date.now();
-      const message = `${action === 'join' ? 'Join' : 'Leave'} Relay Stats Leaderboard\nAddress: ${address}\nTimestamp: ${timestamp}`;
-
-      console.log(`📝 Generated signature message for ${address} to ${action}`);
-
-      res.json({
+      // Log the action for audit purposes
+      logger.info('Leaderboard action completed', {
+        address: normalizedAddress,
+        originalAddress: address,
+        action: action,
+        optIn: optIn,
+        timestamp: new Date().toISOString(),
+        ip: req.ip
+      });
+      
+      // Prepare response
+      const response = {
         success: true,
-        message: message,
-        timestamp: timestamp
-      });
-    } catch (error) {
-      console.error('Message generation error:', error);
-      logger.error('Message generation error:', error);
-      res.status(500).json({
+        message: result.message,
+        userStats: {
+          address: result.userStats.address,
+          transaction_count: result.userStats.transaction_count,
+          total_usd_value: result.userStats.total_usd_value,
+          unique_chains: result.userStats.unique_chains,
+          unique_tokens: result.userStats.unique_tokens,
+          opt_in_leaderboard: result.userStats.opt_in_leaderboard,
+          last_updated: result.userStats.last_updated
+        }
+      };
+      
+      console.log('✅ Opt-in update completed successfully');
+      res.json(response);
+      
+    } else {
+      console.log('❌ Database update failed:', result.error);
+      res.json({
         success: false,
-        error: 'Failed to generate signature message'
+        error: result.error || 'Database update failed'
       });
     }
-  });
-
-  // SECURED: Update user opt-in status (requires wallet signature)
-  app.post('/api/leaderboard/update-opt-in', async (req, res) => {
-    try {
-      const { address, optIn, signature, message, timestamp } = req.body;
-      
-      // Validate required fields
-      if (!address) {
-        return res.status(400).json({
-          success: false,
-          error: 'Address is required'
-        });
-      }
-
-      if (!signature || !message || !timestamp) {
-        return res.status(400).json({
-          success: false,
-          error: 'Wallet signature required for leaderboard changes. Please connect your wallet and sign the message.'
-        });
-      }
-
-      // Verify timestamp (must be within last 5 minutes)
-      const now = Date.now();
-      const messageTime = parseInt(timestamp);
-      if (now - messageTime > 5 * 60 * 1000) {
-        return res.status(400).json({
-          success: false,
-          error: 'Signature expired. Please sign again.'
-        });
-      }
-
-      // Verify message format
-      const expectedMessage = `${optIn ? 'Join' : 'Leave'} Relay Stats Leaderboard\nAddress: ${address}\nTimestamp: ${timestamp}`;
-      if (message !== expectedMessage) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid message format. Please generate a new signature.'
-        });
-      }
-
-      // Verify signature based on address type
-      let isValidSignature = false;
-      if (address.startsWith('0x')) {
-        // Ethereum signature
-        isValidSignature = verifyEthereumSignature(address, message, signature);
-      } else {
-        // Solana signature  
-        isValidSignature = verifySolanaSignature(address, message, signature);
-      }
-
-      if (!isValidSignature) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid signature. Please sign with the correct wallet that owns this address.'
-        });
-      }
-
-      console.log(`🔐 Verified signature for ${address} to ${optIn ? 'join' : 'leave'} leaderboard`);
-      
-      const result = await leaderboard.updateOptInStatus(address, optIn);
-      
-      if (result.success) {
-        logger.info(`Leaderboard opt-in status updated`, { 
-          address: address, 
-          optIn: optIn,
-          ip: req.ip 
-        });
-
-        res.json({
-          success: true,
-          message: optIn ? 'Successfully joined the leaderboard!' : 'Successfully left the leaderboard.',
-          userStats: result.userStats
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: result.error || 'Failed to update opt-in status'
-        });
-      }
-    } catch (error) {
-      console.error('Secured opt-in update error:', error);
-      logger.error('Secured opt-in update error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update leaderboard status'
-      });
-    }
-  });
+    
+  } catch (error) {
+    console.error('=== OPT-IN UPDATE ERROR ===');
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
+    console.error('============================');
+    
+    // Enhanced error logging for production debugging
+    logger.error('Opt-in update error', {
+      error: error.message,
+      stack: error.stack,
+      address: req.body?.address,
+      optIn: req.body?.optIn,
+      hasSignature: !!req.body?.signature,
+      hasMessage: !!req.body?.message,
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error occurred while updating leaderboard status'
+    });
+  }
+});
 
   // Remove the old unsecured opt-in endpoint completely
   // Legacy endpoint - now returns error directing users to use wallet signature

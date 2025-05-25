@@ -1,1267 +1,1176 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Existing DOM Elements
-  const connectMetaMaskBtn = document.getElementById('connect-metamask');
-  const connectWalletConnectBtn = document.getElementById('connect-walletconnect');
-  const connectCoinbaseBtn = document.getElementById('connect-coinbase');
-  const connectPhantomBtn = document.getElementById('connect-phantom');
-  const connectSolflareBtn = document.getElementById('connect-solflare');
-  const connectBackpackBtn = document.getElementById('connect-backpack');
-  const connectKeplrBtn = document.getElementById('connect-keplr');
-  const connectLeapBtn = document.getElementById('connect-leap');
+  console.log('🚀 Relay Stats App loading...');
   
+  // ========== PURE JAVASCRIPT BASE58 IMPLEMENTATION ==========
+  const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  
+  function base58Encode(bytes) {
+    if (!bytes || bytes.length === 0) return '';
+    
+    let num = 0n;
+    for (let i = 0; i < bytes.length; i++) {
+      num = num * 256n + BigInt(bytes[i]);
+    }
+    
+    let result = '';
+    while (num > 0n) {
+      result = BASE58_ALPHABET[Number(num % 58n)] + result;
+      num = num / 58n;
+    }
+    
+    for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
+      result = '1' + result;
+    }
+    
+    return result;
+  }
+  
+  window.base58Encode = base58Encode;
+
+  // ========== DOM ELEMENTS (matching your actual HTML structure) ==========
+  
+  // Wallet modal elements (based on your HTML)
   const connectWalletBtn = document.getElementById('connect-wallet-btn');
   const walletModal = document.getElementById('wallet-modal');
   const closeModalBtn = document.getElementById('close-modal-btn');
   const walletModalOverlay = document.querySelector('.wallet-modal-overlay');
   
-  const refreshAnalysisBtn = document.getElementById('refresh-analysis-btn');
+  // Individual wallet buttons (based on your HTML)
+  const connectMetaMaskBtn = document.getElementById('connect-metamask');
+  const connectPhantomBtn = document.getElementById('connect-phantom');
+  const connectSolflareBtn = document.getElementById('connect-solflare');
+  const connectBackpackBtn = document.getElementById('connect-backpack');
+  const connectWalletConnectBtn = document.getElementById('connect-walletconnect');
+  const connectCoinbaseBtn = document.getElementById('connect-coinbase');
+  const connectKeplrBtn = document.getElementById('connect-keplr');
+  const connectLeapBtn = document.getElementById('connect-leap');
   
+  // Wallet status elements (based on your HTML)
   const walletStatus = document.getElementById('wallet-status');
   const disconnectBtn = document.getElementById('disconnect-btn');
+  const refreshAnalysisBtn = document.getElementById('refresh-analysis-btn');
+  
+  // Analysis elements (based on your HTML)
   const addressInput = document.getElementById('address-input');
   const analyzeBtn = document.getElementById('analyze-btn');
-  const loadingSection = document.getElementById('loading');
-  const resultsSection = document.getElementById('results');
-  const errorSection = document.getElementById('error-message');
-  const errorText = document.getElementById('error-text');
-  const troubleshootingList = document.getElementById('troubleshooting-list');
+  const loadingDiv = document.getElementById('loading');
+  const resultsDiv = document.getElementById('results');
+  const errorDiv = document.getElementById('error-message');
   
-  // Results elements
-  const firstDate = document.getElementById('first-date');
-  const txCount = document.getElementById('tx-count');
-  const chainsCount = document.getElementById('chains-count');
-  const tokensCount = document.getElementById('tokens-count');
-  const totalValueDisplay = document.getElementById('total-value-display');
+  // Results display elements (based on your HTML)
+  const firstDateEl = document.getElementById('first-date');
+  const txCountEl = document.getElementById('tx-count');
+  const chainsCountEl = document.getElementById('chains-count');
+  const tokensCountEl = document.getElementById('tokens-count');
+  const totalValueEl = document.getElementById('total-value-display');
   const tokensTableBody = document.getElementById('tokens-tbody');
-
-  // NEW: Leaderboard DOM elements
-  const leaderboardTabs = document.querySelectorAll('.tab-btn');
-  const leaderboardContent = document.getElementById('leaderboard-content');
+  
+  // Leaderboard elements (based on your HTML)
   const leaderboardLoading = document.getElementById('leaderboard-loading');
   const leaderboardTable = document.getElementById('leaderboard-table');
-  const leaderboardBody = document.getElementById('leaderboard-body');
   const leaderboardError = document.getElementById('leaderboard-error');
-  const userRankCard = document.getElementById('user-rank-card');
-  const optInBtn = document.getElementById('opt-in-btn');
-  const optInModal = document.getElementById('opt-in-modal');
-  const optInYes = document.getElementById('opt-in-yes');
-  const optInNo = document.getElementById('opt-in-no');
-  const modalClose = document.querySelector('.modal-close');
+  const leaderboardBody = document.getElementById('leaderboard-body');
   
-  // Ensure disconnect button is hidden initially
-  disconnectBtn.classList.add('hidden');
+  // ========== STATE VARIABLES ==========
   
-  // Store current connected address globally
   let currentConnectedAddress = null;
+  let connectedWalletType = null;
   let currentLeaderboardType = 'transactions';
-  let connectedWalletType = null; // Track which wallet type is connected
-  
-  // NEW: Signature verification functions
-// Replace the signMessageWithWallet function (around line 65) with this improved version:
+  let currentLeaderboardPage = 1;
+  let totalLeaderboardPages = 1;
+  let leaderboardSearch = '';
 
-async function signMessageWithWallet(message, address) {
-  try {
-    if (address.startsWith('0x')) {
-      // Ethereum signature
-      if (typeof window.ethereum !== 'undefined') {
-        const signature = await window.ethereum.request({
-          method: 'personal_sign',
-          params: [message, address]
-        });
-        return signature;
-      } else {
-        throw new Error('Ethereum wallet (MetaMask) not available');
-      }
-    } else {
-      // Solana signature - enhanced handling with better error checking
-      console.log('Attempting Solana signature for address:', address);
-      
-      const messageUint8 = new TextEncoder().encode(message);
-      
-      // Try Phantom wallet
-      if (window.solana && window.solana.isPhantom) {
-        console.log('Using Phantom wallet for signing');
-        try {
-          const result = await window.solana.signMessage(messageUint8, 'utf8');
-          console.log('Phantom signMessage result:', result);
-          
-          // Handle different Phantom response formats
-          if (result && result.signature) {
-            if (result.signature instanceof Uint8Array) {
-              return arrayToBase58(result.signature);
-            } else if (Array.isArray(result.signature)) {
-              return arrayToBase58(new Uint8Array(result.signature));
-            } else {
-              console.error('Unexpected Phantom signature format:', typeof result.signature);
-              throw new Error('Unexpected signature format from Phantom');
-            }
-          } else {
-            console.error('No signature in Phantom response:', result);
-            throw new Error('No signature returned from Phantom');
-          }
-        } catch (phantomError) {
-          console.error('Phantom signing error:', phantomError);
-          throw new Error(`Phantom signing failed: ${phantomError.message}`);
+  // ========== INITIALIZATION ==========
+  
+  initializePage();
+
+  function initializePage() {
+    console.log('🔧 Initializing page...');
+    setupEventListeners();
+    checkExistingConnections();
+    loadLeaderboardWithPagination('transactions');
+  }
+
+  function setupEventListeners() {
+    console.log('🔧 Setting up event listeners...');
+    
+    // Wallet modal controls
+    if (connectWalletBtn) {
+      connectWalletBtn.addEventListener('click', openWalletModal);
+    }
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeWalletModal);
+    }
+    if (walletModalOverlay) {
+      walletModalOverlay.addEventListener('click', (e) => {
+        if (e.target === walletModalOverlay) {
+          closeWalletModal();
         }
-      }
-      
-      // Try Solflare wallet
-      else if (window.solflare && window.solflare.isConnected) {
-        console.log('Using Solflare wallet for signing');
-        try {
-          const result = await window.solflare.signMessage(messageUint8, 'utf8');
-          console.log('Solflare signMessage result:', result);
-          
-          if (result && result.signature) {
-            if (result.signature instanceof Uint8Array) {
-              return arrayToBase58(result.signature);
-            } else if (Array.isArray(result.signature)) {
-              return arrayToBase58(new Uint8Array(result.signature));
-            } else {
-              throw new Error('Unexpected signature format from Solflare');
-            }
-          } else {
-            throw new Error('No signature returned from Solflare');
-          }
-        } catch (solflareError) {
-          console.error('Solflare signing error:', solflareError);
-          throw new Error(`Solflare signing failed: ${solflareError.message}`);
+      });
+    }
+    
+    // Individual wallet connections
+    if (connectMetaMaskBtn) connectMetaMaskBtn.addEventListener('click', connectMetaMask);
+    if (connectPhantomBtn) connectPhantomBtn.addEventListener('click', connectPhantom);
+    if (connectSolflareBtn) connectSolflareBtn.addEventListener('click', connectSolflare);
+    if (connectBackpackBtn) connectBackpackBtn.addEventListener('click', connectBackpack);
+    if (connectWalletConnectBtn) connectWalletConnectBtn.addEventListener('click', connectWalletConnect);
+    if (connectCoinbaseBtn) connectCoinbaseBtn.addEventListener('click', connectCoinbase);
+    if (connectKeplrBtn) connectKeplrBtn.addEventListener('click', connectKeplr);
+    if (connectLeapBtn) connectLeapBtn.addEventListener('click', connectLeap);
+    
+    // Disconnect and refresh
+    if (disconnectBtn) disconnectBtn.addEventListener('click', disconnectWallet);
+    if (refreshAnalysisBtn) refreshAnalysisBtn.addEventListener('click', refreshAnalysis);
+    
+    // Analysis button
+    if (analyzeBtn) analyzeBtn.addEventListener('click', handleAnalyzeClick);
+    
+    // Address input
+    if (addressInput) {
+      addressInput.addEventListener('input', handleAddressInput);
+      addressInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleAnalyzeClick();
         }
-      }
-      
-      // Try Backpack wallet  
-      else if (window.backpack && window.backpack.isBackpack) {
-        console.log('Using Backpack wallet for signing');
-        try {
-          const result = await window.backpack.signMessage(messageUint8, 'utf8');
-          console.log('Backpack signMessage result:', result);
-          
-          if (result && result.signature) {
-            if (result.signature instanceof Uint8Array) {
-              return arrayToBase58(result.signature);
-            } else if (Array.isArray(result.signature)) {
-              return arrayToBase58(new Uint8Array(result.signature));
-            } else {
-              throw new Error('Unexpected signature format from Backpack');
-            }
-          } else {
-            throw new Error('No signature returned from Backpack');
-          }
-        } catch (backpackError) {
-          console.error('Backpack signing error:', backpackError);
-          throw new Error(`Backpack signing failed: ${backpackError.message}`);
-        }
-      }
-      
-      // If no Solana wallet is available
-      else {
-        throw new Error('No Solana wallet available for signing. Please connect Phantom, Solflare, or Backpack wallet.');
-      }
-    }
-  } catch (error) {
-    console.error('Signing error:', error);
-    throw error;
-  }
-}
-
-// Improved base58 encoding function
-function arrayToBase58(uint8Array) {
-  try {
-    console.log('Converting to base58, input type:', typeof uint8Array, 'length:', uint8Array?.length);
-    
-    // Ensure we have a proper Uint8Array
-    if (!uint8Array) {
-      throw new Error('No data to encode');
-    }
-    
-    if (!(uint8Array instanceof Uint8Array)) {
-      if (Array.isArray(uint8Array)) {
-        uint8Array = new Uint8Array(uint8Array);
-      } else {
-        throw new Error('Invalid data type for base58 encoding');
-      }
-    }
-    
-    // Use bs58 library if available (recommended)
-    if (typeof bs58 !== 'undefined' && bs58.encode) {
-      console.log('Using bs58 library for encoding');
-      return bs58.encode(uint8Array);
-    }
-    
-    // Fallback: manual base58 encoding
-    console.log('Using manual base58 encoding');
-    const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-    let result = '';
-    
-    // Handle leading zeros
-    let leadingZeros = 0;
-    for (let i = 0; i < uint8Array.length && uint8Array[i] === 0; i++) {
-      leadingZeros++;
-    }
-    
-    // Convert to big integer
-    let num = BigInt(0);
-    for (let i = 0; i < uint8Array.length; i++) {
-      num = num * BigInt(256) + BigInt(uint8Array[i]);
-    }
-    
-    // Convert to base58
-    while (num > 0) {
-      result = alphabet[Number(num % BigInt(58))] + result;
-      num = num / BigInt(58);
-    }
-    
-    // Add leading '1's for leading zeros
-    result = '1'.repeat(leadingZeros) + result;
-    
-    console.log('Base58 encoding result length:', result.length);
-    return result;
-    
-  } catch (error) {
-    console.error('Base58 encoding error:', error);
-    
-    // Final fallback: base64 encoding with warning
-    console.warn('Falling back to base64 encoding due to base58 error');
-    try {
-      return btoa(String.fromCharCode.apply(null, uint8Array));
-    } catch (base64Error) {
-      console.error('Base64 encoding also failed:', base64Error);
-      throw new Error('Failed to encode signature data');
-    }
-  }
-}
-
-  // Get current wallet address
-  function getCurrentWalletAddress() {
-    return currentConnectedAddress || null;
-  }
-
-  // Updated opt-in function with signature verification
-  async function handleOptIn() {
-    try {
-      const currentAddress = getCurrentWalletAddress();
-      
-      if (!currentAddress) {
-        showMessage('Please connect your wallet first to join the leaderboard.', 'error');
-        return;
-      }
-
-      // Show loading
-      optInBtn.disabled = true;
-      optInBtn.textContent = '🔐 Preparing signature...';
-
-      // Get signature message from server
-      const messageResponse = await fetch('/api/leaderboard/get-signature-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          address: currentAddress, 
-          action: 'join' 
-        })
       });
+    }
 
-      const messageData = await messageResponse.json();
-      
-      if (!messageData.success) {
-        throw new Error(messageData.error);
-      }
+    // Leaderboard tabs
+    setupLeaderboardTabs();
+  }
 
-      optInBtn.textContent = '✍️ Please sign the message...';
+  function setupLeaderboardTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
 
-      // Sign the message
-      const signature = await signMessageWithWallet(messageData.message, currentAddress);
-
-      optInBtn.textContent = '🚀 Joining leaderboard...';
-
-      // Submit to server with signature
-      const response = await fetch('/api/leaderboard/update-opt-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address: currentAddress,
-          optIn: true,
-          signature: signature,
-          message: messageData.message,
-          timestamp: messageData.timestamp
-        })
+        currentLeaderboardType = tab.dataset.type;
+        loadLeaderboardWithPagination(currentLeaderboardType, 1, '');
+        
+        setTimeout(() => addLeaderboardSearch(), 100);
       });
+    });
+  }
 
-      const result = await response.json();
-      
-      if (result.success) {
-        showMessage(result.message, 'success');
-        
-        // Refresh leaderboard and user rank
-        await loadLeaderboard(currentLeaderboardType);
-        await loadUserRank(currentAddress);
-        
-        optInBtn.textContent = '✅ Joined Leaderboard';
-        optInBtn.disabled = true;
-        
-        // Add opt-out button
-        addOptOutButton(currentAddress);
-      } else {
-        throw new Error(result.error);
-      }
-
-    } catch (error) {
-      console.error('Opt-in error:', error);
-      showMessage(`Failed to join leaderboard: ${error.message}`, 'error');
-      
-      optInBtn.disabled = false;
-      optInBtn.textContent = '🏆 Join Leaderboard';
+  // ========== WALLET MODAL FUNCTIONS ==========
+  
+  function openWalletModal() {
+    console.log('📱 Opening wallet modal...');
+    if (walletModal) {
+      walletModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+  }
+  
+  function closeWalletModal() {
+    console.log('📱 Closing wallet modal...');
+    if (walletModal) {
+      walletModal.classList.add('hidden');
+      document.body.style.overflow = ''; // Restore scrolling
     }
   }
 
-  // Add opt-out functionality
-  async function handleOptOut(address) {
-    try {
-      // Show confirmation modal first
-      if (!confirm('Are you sure you want to leave the leaderboard? You can rejoin anytime.')) {
-        return;
-      }
-
-      const optOutBtn = document.getElementById('opt-out-btn');
-      if (optOutBtn) {
-        optOutBtn.disabled = true;
-        optOutBtn.textContent = '🔐 Preparing signature...';
-      }
-
-      // Get signature message for opt-out
-      const messageResponse = await fetch('/api/leaderboard/get-signature-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          address: address, 
-          action: 'leave' 
-        })
-      });
-
-      const messageData = await messageResponse.json();
-      
-      if (!messageData.success) {
-        throw new Error(messageData.error);
-      }
-
-      if (optOutBtn) optOutBtn.textContent = '✍️ Please sign...';
-
-      // Sign the message
-      const signature = await signMessageWithWallet(messageData.message, address);
-
-      if (optOutBtn) optOutBtn.textContent = '🚀 Leaving...';
-
-      // Submit opt-out request
-      const response = await fetch('/api/leaderboard/update-opt-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address: address,
-          optIn: false,
-          signature: signature,
-          message: messageData.message,
-          timestamp: messageData.timestamp
-        })
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        showMessage(result.message, 'success');
-        
-        // Refresh leaderboard and user rank
-        await loadLeaderboard(currentLeaderboardType);
-        await loadUserRank(address);
-        
-        // Show join button again
-        optInBtn.textContent = '🏆 Join Leaderboard';
-        optInBtn.disabled = false;
-        
-        // Remove opt-out button
-        removeOptOutButton();
-      } else {
-        throw new Error(result.error);
-      }
-
-    } catch (error) {
-      console.error('Opt-out error:', error);
-      showMessage(`Failed to leave leaderboard: ${error.message}`, 'error');
-      
-      const optOutBtn = document.getElementById('opt-out-btn');
-      if (optOutBtn) {
-        optOutBtn.disabled = false;
-        optOutBtn.textContent = '❌ Leave Leaderboard';
-      }
-    }
-  }
-
-  // Helper functions for opt-out button
-  function addOptOutButton(address) {
-    const existingBtn = document.getElementById('opt-out-btn');
-    if (existingBtn) return;
-
-    const optOutBtn = document.createElement('button');
-    optOutBtn.id = 'opt-out-btn';
-    optOutBtn.className = 'btn-secondary';
-    optOutBtn.textContent = '❌ Leave Leaderboard';
-    optOutBtn.style.marginTop = '10px';
-    optOutBtn.style.width = '100%';
-    optOutBtn.onclick = () => handleOptOut(address);
-    
-    optInBtn.parentNode.appendChild(optOutBtn);
-  }
-
-  function removeOptOutButton() {
-    const optOutBtn = document.getElementById('opt-out-btn');
-    if (optOutBtn) {
-      optOutBtn.remove();
-    }
-  }
-
-  // Update the displayUserRank function to show opt-out button for opted-in users
-  function displayUserRank(data) {
-    const ranks = data.ranks;
-    const userStats = data.userStats;
-
-    document.getElementById('user-rank-transactions').textContent = 
-      ranks.transactions ? `#${ranks.transactions}` : 'Not ranked';
-    document.getElementById('user-rank-volume').textContent = 
-      ranks.volume ? `#${ranks.volume}` : 'Not ranked';
-    document.getElementById('user-rank-chains').textContent = 
-      ranks.chains ? `#${ranks.chains}` : 'Not ranked';
-    document.getElementById('user-rank-tokens').textContent = 
-      ranks.tokens ? `#${ranks.tokens}` : 'Not ranked';
-
-    // Update opt-in button based on user status
-    const currentAddress = getCurrentWalletAddress();
-    const addressMatches = currentAddress && userStats && 
-      currentAddress.toLowerCase() === userStats.address.toLowerCase();
-
-    if (userStats && userStats.opt_in_leaderboard === 1) {
-      if (addressMatches) {
-        // User is opted in and it's their own address
-        optInBtn.textContent = '✅ Joined Leaderboard';
-        optInBtn.disabled = true;
-        addOptOutButton(currentAddress);
-      } else {
-        // User is opted in but not connected to this wallet
-        optInBtn.textContent = '✅ On Leaderboard';
-        optInBtn.disabled = true;
-        removeOptOutButton();
-      }
-    } else {
-      // User is not opted in
-      if (addressMatches) {
-        // User can opt in with their connected wallet
-        optInBtn.textContent = '🏆 Join Leaderboard';
-        optInBtn.disabled = false;
-        removeOptOutButton();
-      } else {
-        // Not their wallet - show generic message
-        optInBtn.textContent = '🔐 Connect wallet to join';
-        optInBtn.disabled = true;
-        removeOptOutButton();
-      }
-    }
-  }
-
-  // Event Listeners for wallet connections
-  connectMetaMaskBtn.addEventListener('click', connectMetaMask);
-  connectWalletConnectBtn.addEventListener('click', connectWalletConnect);
-  connectCoinbaseBtn.addEventListener('click', connectCoinbase);
-  connectPhantomBtn.addEventListener('click', connectPhantom);
-  connectSolflareBtn.addEventListener('click', connectSolflare);
-  connectBackpackBtn.addEventListener('click', connectBackpack);
-  connectKeplrBtn.addEventListener('click', connectKeplr);
-  connectLeapBtn.addEventListener('click', connectLeap);
+  // ========== WALLET CONNECTION FUNCTIONS ==========
   
-  analyzeBtn.addEventListener('click', analyzeManualAddress);
-  disconnectBtn.addEventListener('click', disconnectWallet);
-  
-  // Event listeners for wallet modal
-  connectWalletBtn.addEventListener('click', showWalletModal);
-  closeModalBtn.addEventListener('click', hideWalletModal);
-  walletModalOverlay.addEventListener('click', hideWalletModal);
-  
-  // Update the refresh button event listener
-  if (refreshAnalysisBtn) {
-    refreshAnalysisBtn.addEventListener('click', () => {
-      const address = currentConnectedAddress || addressInput.value.trim();
-      
-      if (address) {
-        analyzeAddress(address, true); // Force refresh = true
-      } else {
-        alert('No address to refresh. Please connect wallet or enter an address.');
-      }
-    });
-  }
-
-  // NEW: Leaderboard Event Listeners
-  
-  // Leaderboard tab switching
-  leaderboardTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Update active tab
-      leaderboardTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      // Load new leaderboard type
-      currentLeaderboardType = tab.dataset.type;
-      loadLeaderboard(currentLeaderboardType);
-    });
-  });
-
-  // Updated opt-in button event listener
-  optInBtn.addEventListener('click', () => {
-    const currentAddress = getCurrentWalletAddress();
-    const manualAddress = addressInput.value.trim();
-    
-    if (currentAddress) {
-      // User has connected wallet - proceed with secure opt-in
-      handleOptIn();
-    } else if (manualAddress) {
-      // User entered address manually but no wallet connected
-      showMessage('Please connect your wallet to join the leaderboard. Manual addresses cannot be verified.', 'error');
-    } else {
-      // No address available
-      showMessage('Please connect your wallet or analyze an address first.', 'error');
-    }
-  });
-
-  // Modal controls - Remove old opt-in modal since we use signature flow
-  if (optInYes) {
-    optInYes.addEventListener('click', () => {
-      optInModal.classList.add('hidden');
-      handleOptIn();
-    });
-  }
-
-  if (optInNo) {
-    optInNo.addEventListener('click', () => {
-      optInModal.classList.add('hidden');
-    });
-  }
-
-  if (modalClose) {
-    modalClose.addEventListener('click', () => {
-      optInModal.classList.add('hidden');
-    });
-  }
-
-  // Close modal on outside click
-  if (optInModal) {
-    optInModal.addEventListener('click', (e) => {
-      if (e.target === optInModal) {
-        optInModal.classList.add('hidden');
-      }
-    });
-  }
-  
-  // Functions to show/hide wallet modal
-  function showWalletModal() {
-    walletModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  }
-  
-  function hideWalletModal() {
-    walletModal.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
-  
-  // Check wallet availability when page loads
-  checkWalletAvailability();
-  
-  // EVM Wallet Connections
   async function connectMetaMask() {
-    if (!window.ethereum) {
-      showInstallInstructions('connect-metamask');
-      return;
-    }
-    
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const address = accounts[0];
-      updateWalletStatus(address, 'MetaMask');
-      analyzeAddress(address);
+      console.log('🦊 Connecting MetaMask...');
+      
+      if (typeof window.ethereum === 'undefined') {
+        showMessage('MetaMask not detected. Please install MetaMask extension.', 'error');
+        return;
+      }
+
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      if (accounts.length > 0) {
+        currentConnectedAddress = accounts[0];
+        connectedWalletType = 'metamask';
+        updateWalletUI();
+        closeWalletModal();
+        showMessage('MetaMask connected successfully!', 'success');
+      }
     } catch (error) {
       console.error('MetaMask connection error:', error);
-      walletStatus.textContent = 'Connection failed';
+      showMessage('Failed to connect MetaMask: ' + error.message, 'error');
     }
   }
-  
-  async function connectWalletConnect() {
+
+  async function connectPhantom() {
     try {
-      if (typeof WalletConnectProvider === 'undefined') {
-        console.error("WalletConnect provider not found");
-        alert("WalletConnect library not loaded. Please refresh the page and try again.");
+      console.log('👻 Connecting Phantom...');
+      
+      if (!window.solana?.isPhantom) {
+        showMessage('Phantom wallet not detected. Please install Phantom extension.', 'error');
         return;
       }
 
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.log("Device detection:", isMobile ? "Mobile" : "Desktop");
-      
-      const providerOptions = {
-        rpc: {
-          1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-          137: "https://polygon-rpc.com", 
-          56: "https://bsc-dataseed.binance.org"
-        },
-        qrcodeModalOptions: {
-          mobileLinks: [
-            "metamask",
-            "trust",
-            "rainbow",
-            "argent",
-            "imtoken"
-          ]
-        }
-      };
-      
-      console.log("Creating WalletConnect provider...");
-      const provider = new WalletConnectProvider.default(providerOptions);
-      
-      console.log("Enabling WalletConnect provider...");
-      await provider.enable();
-      window.walletConnectProvider = provider;
-      
-      console.log("Creating Web3 instance...");
-      const web3 = new Web3(provider);
-      
-      console.log("Getting accounts...");
-      const accounts = await web3.eth.getAccounts();
-      const address = accounts[0];
-      
-      console.log("Connected with address:", address);
-      updateWalletStatus(address, 'WalletConnect');
-      analyzeAddress(address);
-      
-      provider.on("disconnect", (code, reason) => {
-        console.log("WalletConnect disconnected:", code, reason);
-        resetConnectionUI();
-      });
-      
-    } catch (error) {
-      console.error('WalletConnect error:', error);
-      walletStatus.textContent = 'Connection failed';
-      alert("WalletConnect connection failed: " + error.message);
-    }
-  }
-  
-  async function connectCoinbase() {
-    try {
-      if (!window.CoinbaseWalletSDK) {
-        showInstallInstructions('connect-coinbase');
-        return;
-      }
-      
-      const coinbaseWallet = new CoinbaseWalletSDK({
-        appName: 'Relay Stats App',
-        appLogoUrl: 'https://example.com/logo.png',
-        darkMode: false
-      });
-      
-      const ethereum = coinbaseWallet.makeWeb3Provider();
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-      const address = accounts[0];
-      
-      updateWalletStatus(address, 'Coinbase Wallet');
-      analyzeAddress(address);
-      
-    } catch (error) {
-      console.error('Coinbase Wallet error:', error);
-      walletStatus.textContent = 'Connection failed';
-    }
-  }
-  
-  // Solana Wallet Connections
-  async function connectPhantom() {
-    if (!window.solana || !window.solana.isPhantom) {
-      showInstallInstructions('connect-phantom');
-      return;
-    }
-    
-    try {
-      const resp = await window.solana.connect();
-      const address = resp.publicKey.toString();
-      
-      updateWalletStatus(address, 'Phantom');
-      analyzeAddress(address);
-      
+      const response = await window.solana.connect();
+      currentConnectedAddress = response.publicKey.toString();
+      connectedWalletType = 'phantom';
+      updateWalletUI();
+      closeWalletModal();
+      showMessage('Phantom wallet connected successfully!', 'success');
     } catch (error) {
       console.error('Phantom connection error:', error);
-      walletStatus.textContent = 'Connection failed';
+      showMessage('Failed to connect Phantom: ' + error.message, 'error');
     }
   }
-  
+
   async function connectSolflare() {
-    if (!window.solflare) {
-      showInstallInstructions('connect-solflare');
-      return;
-    }
-    
     try {
+      console.log('🔥 Connecting Solflare...');
+      
+      if (!window.solflare) {
+        showMessage('Solflare wallet not detected. Please install Solflare extension.', 'error');
+        return;
+      }
+
       await window.solflare.connect();
-      const address = window.solflare.publicKey.toString();
-      
-      updateWalletStatus(address, 'Solflare');
-      analyzeAddress(address);
-      
+      currentConnectedAddress = window.solflare.publicKey.toString();
+      connectedWalletType = 'solflare';
+      updateWalletUI();
+      closeWalletModal();
+      showMessage('Solflare wallet connected successfully!', 'success');
     } catch (error) {
       console.error('Solflare connection error:', error);
-      walletStatus.textContent = 'Connection failed';
+      showMessage('Failed to connect Solflare: ' + error.message, 'error');
     }
   }
-  
-  async function connectBackpack() {
+
+// Replace the connectBackpack function (around line 200) with this:
+
+async function connectBackpack() {
+  try {
+    console.log('🎒 Connecting Backpack...');
+    
     if (!window.backpack) {
-      showInstallInstructions('connect-backpack');
+      showMessage('Backpack wallet not detected. Please install Backpack extension.', 'error');
       return;
     }
+
+    // Backpack connection method
+    const response = await window.backpack.connect();
     
-    try {
-      await window.backpack.connect();
-      const address = window.backpack.publicKey.toString();
-      
-      updateWalletStatus(address, 'Backpack');
-      analyzeAddress(address);
-      
-    } catch (error) {
-      console.error('Backpack connection error:', error);
-      walletStatus.textContent = 'Connection failed';
+    console.log('Backpack connection response:', response);
+    
+    // Handle different response formats from Backpack
+    let publicKey;
+    if (response.publicKey) {
+      if (typeof response.publicKey === 'string') {
+        publicKey = response.publicKey;
+      } else if (response.publicKey.toString) {
+        publicKey = response.publicKey.toString();
+      } else if (response.publicKey.toBase58) {
+        publicKey = response.publicKey.toBase58();
+      } else {
+        throw new Error('Unable to extract public key from Backpack response');
+      }
+    } else {
+      throw new Error('No public key in Backpack connection response');
     }
+    
+    currentConnectedAddress = publicKey;
+    connectedWalletType = 'backpack';
+    updateWalletUI();
+    closeWalletModal();
+    showMessage('Backpack wallet connected successfully!', 'success');
+    
+  } catch (error) {
+    console.error('Backpack connection error:', error);
+    showMessage('Failed to connect Backpack: ' + error.message, 'error');
   }
-  
-  // Cosmos Wallet Connections
+}
+
+  async function connectWalletConnect() {
+    showMessage('WalletConnect integration coming soon!', 'info');
+    closeWalletModal();
+  }
+
+  async function connectCoinbase() {
+    showMessage('Coinbase Wallet integration coming soon!', 'info');
+    closeWalletModal();
+  }
+
   async function connectKeplr() {
-    if (!window.keplr) {
-      showInstallInstructions('connect-keplr');
-      return;
-    }
-    
-    try {
-      await window.keplr.enable("cosmoshub-4");
-      const offlineSigner = window.keplr.getOfflineSigner("cosmoshub-4");
-      const accounts = await offlineSigner.getAccounts();
-      const address = accounts[0].address;
-      
-      updateWalletStatus(address, 'Keplr');
-      analyzeAddress(address);
-      
-    } catch (error) {
-      console.error('Keplr connection error:', error);
-      walletStatus.textContent = 'Connection failed';
-    }
+    showMessage('Keplr integration coming soon!', 'info');
+    closeWalletModal();
   }
-  
+
   async function connectLeap() {
-    if (!window.leap) {
-      showInstallInstructions('connect-leap');
-      return;
-    }
-    
-    try {
-      await window.leap.enable("cosmoshub-4");
-      const offlineSigner = window.leap.getOfflineSigner("cosmoshub-4");
-      const accounts = await offlineSigner.getAccounts();
-      const address = accounts[0].address;
+    showMessage('Leap integration coming soon!', 'info');
+    closeWalletModal();
+  }
+
+  function disconnectWallet() {
+    currentConnectedAddress = null;
+    connectedWalletType = null;
+    updateWalletUI();
+    showMessage('Wallet disconnected', 'info');
+  }
+
+  function updateWalletUI() {
+    if (currentConnectedAddress) {
+      // Update wallet status
+      if (walletStatus) {
+        walletStatus.textContent = `Connected: ${currentConnectedAddress.slice(0, 6)}...${currentConnectedAddress.slice(-4)}`;
+      }
       
-      updateWalletStatus(address, 'Leap');
-      analyzeAddress(address);
+      // Show disconnect button and refresh button
+      if (disconnectBtn) disconnectBtn.classList.remove('hidden');
+      if (refreshAnalysisBtn) refreshAnalysisBtn.classList.remove('hidden');
       
-    } catch (error) {
-      console.error('Leap connection error:', error);
-      walletStatus.textContent = 'Connection failed';
+      // Hide connect button
+      if (connectWalletBtn) connectWalletBtn.classList.add('hidden');
+      
+      // Auto-fill address input
+      if (addressInput) {
+        addressInput.value = currentConnectedAddress;
+      }
+    } else {
+      // Reset UI to disconnected state
+      if (walletStatus) walletStatus.textContent = 'Not connected';
+      if (disconnectBtn) disconnectBtn.classList.add('hidden');
+      if (refreshAnalysisBtn) refreshAnalysisBtn.classList.add('hidden');
+      if (connectWalletBtn) connectWalletBtn.classList.remove('hidden');
+      if (addressInput) addressInput.value = '';
     }
   }
 
-  // Disconnect wallet function
-  async function disconnectWallet() {
-    try {
-      if (window.ethereum && window.ethereum._state && window.ethereum._state.isConnected) {
-        console.log('Disconnected from MetaMask');
-      } 
-      else if (window.walletConnectProvider) {
-        await window.walletConnectProvider.disconnect();
-        window.walletConnectProvider = null;
-      }
-      else if (window.solana && window.solana.isPhantom) {
-        await window.solana.disconnect();
-      }
-      else if (window.solflare) {
-        await window.solflare.disconnect();
-      }
-      else if (window.backpack) {
-        await window.backpack.disconnect();
-      }
-      else if (window.keplr) {
-        console.log('Disconnected from Keplr');
-      }
-      else if (window.leap) {
-        console.log('Disconnected from Leap');
-      }
-      
-      resetConnectionUI();
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
-    }
-  }
-  
-function resetConnectionUI() {
-  walletStatus.textContent = 'Not connected';
-  walletStatus.classList.remove('connected');
-  disconnectBtn.classList.add('hidden');
-  connectWalletBtn.classList.remove('hidden');
-  addressInput.value = '';
-  currentConnectedAddress = null;
-  connectedWalletType = null; // Add this line
-  hideAllSections();
-  
-  if (refreshAnalysisBtn) {
-    refreshAnalysisBtn.classList.add('hidden');
+// Replace the checkExistingConnections function with this:
+
+function checkExistingConnections() {
+  // Check MetaMask
+  if (typeof window.ethereum !== 'undefined') {
+    window.ethereum.request({ method: 'eth_accounts' })
+      .then(accounts => {
+        if (accounts.length > 0) {
+          currentConnectedAddress = accounts[0];
+          connectedWalletType = 'metamask';
+          updateWalletUI();
+        }
+      })
+      .catch(console.error);
   }
 
-  // Hide user rank card and remove opt-out button
-  userRankCard.classList.add('hidden');
-  removeOptOutButton();
-}
-  
-  // Check wallet availability
-  function checkWalletAvailability() {
-    const walletChecks = [
-      { id: 'connect-metamask', check: () => window.ethereum },
-      { id: 'connect-walletconnect', check: () => typeof WalletConnectProvider !== 'undefined' },
-      { id: 'connect-coinbase', check: () => typeof CoinbaseWalletSDK !== 'undefined' },
-      { id: 'connect-phantom', check: () => window.solana && window.solana.isPhantom },
-      { id: 'connect-solflare', check: () => window.solflare },
-      { id: 'connect-backpack', check: () => window.backpack },
-      { id: 'connect-keplr', check: () => window.keplr },
-      { id: 'connect-leap', check: () => window.leap }
-    ];
-    
-    walletChecks.forEach(({ id, check }) => {
-      const button = document.getElementById(id);
-      if (button && !check()) {
-        button.classList.add('wallet-not-installed');
-        button.title = 'Wallet not detected. Click to get installation instructions.';
-      }
-    });
-  }
-  
-  function showInstallInstructions(buttonId) {
-    const walletName = buttonId.replace('connect-', '');
-    let installLink = '';
-    
-    switch (walletName) {
-      case 'metamask':
-        installLink = 'https://metamask.io/download/';
-        break;
-      case 'phantom':
-        installLink = 'https://phantom.app/download';
-        break;
-      case 'solflare':
-        installLink = 'https://solflare.com/download';
-        break;
-      case 'backpack':
-        installLink = 'https://www.backpack.app/';
-        break;
-      case 'keplr':
-        installLink = 'https://www.keplr.app/download';
-        break;
-      case 'leap':
-        installLink = 'https://www.leapwallet.io/download';
-        break;
-      case 'coinbase':
-        installLink = 'https://www.coinbase.com/wallet/downloads';
-        break;
-      case 'walletconnect':
-        installLink = 'https://walletconnect.com/';
-        break;
-      default:
-        installLink = 'https://relay.link/bridge';
+  // Check Phantom
+  if (window.solana?.isConnected) {
+    try {
+      currentConnectedAddress = window.solana.publicKey.toString();
+      connectedWalletType = 'phantom';
+      updateWalletUI();
+    } catch (error) {
+      console.error('Error checking Phantom connection:', error);
     }
-    
-    alert(`${walletName.charAt(0).toUpperCase() + walletName.slice(1)} wallet is not installed. Please visit ${installLink} to install it.`);
   }
-  
-function updateWalletStatus(address, walletName) {
-  walletStatus.textContent = `Connected to ${walletName}: ${formatAddress(address)}`;
-  walletStatus.classList.add('connected');
-  addressInput.value = address;
-  disconnectBtn.classList.remove('hidden');
-  connectWalletBtn.classList.add('hidden');
-  currentConnectedAddress = address;
-  
-  // Track wallet type for signing
-  connectedWalletType = walletName.toLowerCase();
-  
-  hideWalletModal();
-  
-  if (refreshAnalysisBtn) {
-    refreshAnalysisBtn.classList.remove('hidden');
+
+  // Check Backpack
+  if (window.backpack?.isConnected) {
+    try {
+      let publicKey;
+      if (window.backpack.publicKey) {
+        if (typeof window.backpack.publicKey === 'string') {
+          publicKey = window.backpack.publicKey;
+        } else if (window.backpack.publicKey.toString) {
+          publicKey = window.backpack.publicKey.toString();
+        } else if (window.backpack.publicKey.toBase58) {
+          publicKey = window.backpack.publicKey.toBase58();
+        }
+        
+        if (publicKey) {
+          currentConnectedAddress = publicKey;
+          connectedWalletType = 'backpack';
+          updateWalletUI();
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Backpack connection:', error);
+    }
+  }
+
+  // Check Solflare
+  if (window.solflare?.isConnected) {
+    try {
+      currentConnectedAddress = window.solflare.publicKey.toString();
+      connectedWalletType = 'solflare';
+      updateWalletUI();
+    } catch (error) {
+      console.error('Error checking Solflare connection:', error);
+    }
   }
 }
+
+  // ========== ANALYSIS FUNCTIONS ==========
   
-  // Analyze manually entered address
-  function analyzeManualAddress() {
+  function handleAddressInput() {
+    const address = addressInput.value.trim();
+    // Just validate format, don't auto-connect
+    if (address.startsWith('0x') && address.length === 42) {
+      console.log('Ethereum address detected');
+    } else if (address.length >= 32 && address.length <= 44 && !address.startsWith('0x')) {
+      console.log('Solana address detected');
+    }
+  }
+
+  async function handleAnalyzeClick() {
     const address = addressInput.value.trim();
     if (!address) {
-      alert('Please enter a valid address');
+      showMessage('Please enter a wallet address', 'error');
       return;
     }
-    
-    analyzeAddress(address);
+    await analyzeAddress(address, false);
   }
-  
-  // Make API call to analyze address - WITH FORCE REFRESH SUPPORT
-  async function analyzeAddress(address, forceRefresh = false) {
-    // Reset and show loading
-    hideAllSections();
-    loadingSection.classList.remove('hidden');
-    
-    const loadingText = document.querySelector('#loading p');
-    if (loadingText) {
-      loadingText.textContent = forceRefresh ? 'Fetching fresh data...' : 'Analyzing address...';
+
+  async function refreshAnalysis() {
+    const address = currentConnectedAddress || addressInput.value.trim();
+    if (!address) {
+      showMessage('No address to refresh', 'error');
+      return;
     }
-    
+    await analyzeAddress(address, true);
+  }
+
+  async function analyzeAddress(address, forceRefresh = false) {
     try {
+      console.log(`🔍 Analyzing address: ${address} (force refresh: ${forceRefresh})`);
+      
+      showLoading();
+      hideResults();
+      hideError();
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
           address: address,
-          forceRefresh: forceRefresh
+          forceRefresh: forceRefresh 
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         displayResults(data);
-        
-        // Load user rank after successful analysis
-        if (data.summary.transactionCount > 0) {
-          await loadUserRank(address);
-        }
+        await loadUserRank(address);
       } else {
-        displayError(data);
+        showError(data.error || 'Analysis failed', data.troubleshooting);
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      errorText.textContent = 'Failed to analyze address. Please try again later.';
-      loadingSection.classList.add('hidden');
-      errorSection.classList.remove('hidden');
-    }
-  }
-  
-  // Display results
-  function displayResults(data) {
-    firstDate.textContent = data.summary.firstDate;
-    txCount.textContent = data.summary.transactionCount;
-    chainsCount.textContent = data.summary.uniqueChains;
-    tokensCount.textContent = data.summary.uniqueTokens;
-    
-    totalValueDisplay.textContent = formatUSD(data.summary.totalUSDValue);
-
-    if (refreshAnalysisBtn) {
-      refreshAnalysisBtn.classList.remove('hidden');
-    }
-    
-    // Clear previous tokens table
-    tokensTableBody.innerHTML = '';
-    
-    // Sort tokens by USD value (if available)
-    const sortedTokens = [...data.tokens].sort((a, b) => {
-      if (a.usdValue && b.usdValue) return b.usdValue - a.usdValue;
-      if (a.usdValue) return -1;
-      if (b.usdValue) return 1;
-      return b.amount - a.amount;
-    });
-    
-    // Add token rows
-    sortedTokens.forEach(token => {
-      const row = document.createElement('tr');
-      
-      const symbolCell = document.createElement('td');
-      symbolCell.textContent = token.symbol;
-      
-      const amountCell = document.createElement('td');
-      amountCell.textContent = formatNumber(token.amount);
-      
-      const priceCell = document.createElement('td');
-      priceCell.textContent = token.price ? formatUSD(token.price) : 'Unknown';
-      
-      const valueCell = document.createElement('td');
-      valueCell.textContent = token.usdValue ? formatUSD(token.usdValue) : '-';
-      
-      row.appendChild(symbolCell);
-      row.appendChild(amountCell);
-      row.appendChild(priceCell);
-      row.appendChild(valueCell);
-      
-      tokensTableBody.appendChild(row);
-    });
-    
-    // Add cache indicator if data is from cache
-    if (data.metadata && data.metadata.fromCache !== undefined) {
-      const cacheIndicator = document.createElement('div');
-      cacheIndicator.className = 'cache-indicator';
-      cacheIndicator.innerHTML = data.metadata.fromCache 
-        ? '📋 Data from cache (use refresh button for latest data)'
-        : '🔄 Fresh data fetched';
-      cacheIndicator.style.cssText = `
-        margin-top: 10px;
-        padding: 8px 12px;
-        background: ${data.metadata.fromCache ? '#fff3cd' : '#d4edda'};
-        border: 1px solid ${data.metadata.fromCache ? '#ffeaa7' : '#c3e6cb'};
-        border-radius: 6px;
-        font-size: 14px;
-        color: ${data.metadata.fromCache ? '#856404' : '#155724'};
-      `;
-      
-      const summarySection = document.querySelector('.summary-grid');
-      if (summarySection && summarySection.parentNode) {
-        summarySection.parentNode.insertBefore(cacheIndicator, summarySection.nextSibling);
-      }
-    }
-    
-    // Show results section
-    loadingSection.classList.add('hidden');
-    resultsSection.classList.remove('hidden');
-  }
-  
-  // Display error
-  function displayError(data) {
-    errorText.textContent = data.error || 'An unknown error occurred';
-    
-    troubleshootingList.innerHTML = '';
-    if (data.troubleshooting && Array.isArray(data.troubleshooting)) {
-      data.troubleshooting.forEach(tip => {
-        const li = document.createElement('li');
-        li.textContent = tip;
-        troubleshootingList.appendChild(li);
-      });
-    }
-    
-    loadingSection.classList.add('hidden');
-    errorSection.classList.remove('hidden');
-  }
-
-  // NEW: Leaderboard Functions
-
-  async function loadLeaderboard(type = 'transactions') {
-    try {
-      leaderboardLoading.classList.remove('hidden');
-      leaderboardTable.classList.add('hidden');
-      leaderboardError.classList.add('hidden');
-
-      const response = await fetch(`/api/leaderboard/${type}?limit=50`);
-      const data = await response.json();
-
-      if (data.success) {
-        displayLeaderboard(data.leaderboard, type);
-        leaderboardTable.classList.remove('hidden');
-      } else {
-        throw new Error(data.error || 'Failed to load leaderboard');
-      }
-    } catch (err) {
-      console.error('Leaderboard error:', err);
-      leaderboardError.textContent = `Failed to load leaderboard: ${err.message}`;
-      leaderboardError.classList.remove('hidden');
+      showError('Network error occurred. Please try again.');
     } finally {
-      leaderboardLoading.classList.add('hidden');
+      hideLoading();
     }
   }
 
-  function displayLeaderboard(data, type) {
-    leaderboardBody.innerHTML = '';
-
-    if (!data || data.length === 0) {
-      leaderboardBody.innerHTML = `
+  function displayResults(data) {
+    const { summary, tokens } = data;
+    
+    console.log('📊 Displaying results:', summary);
+    
+    // Update summary cards (matching your HTML structure)
+    if (firstDateEl) firstDateEl.textContent = summary.firstDate || 'N/A';
+    if (txCountEl) txCountEl.textContent = (summary.transactionCount || 0).toLocaleString();
+    if (chainsCountEl) chainsCountEl.textContent = summary.uniqueChains || 0;
+    if (tokensCountEl) tokensCountEl.textContent = summary.uniqueTokens || 0;
+    if (totalValueEl) totalValueEl.textContent = '$' + (summary.totalUSDValue || 0).toLocaleString();
+    
+    // Update tokens table
+    if (tokensTableBody && tokens && tokens.length > 0) {
+      tokensTableBody.innerHTML = tokens.map(token => `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 2rem;">
-            No leaderboard data available yet. Be the first to join! 🚀
+          <td>
+            <div class="token-info">
+              <span class="token-symbol">${token.symbol || 'Unknown'}</span>
+              <span class="token-name">${token.name || ''}</span>
+            </div>
           </td>
+          <td>${(token.amount || 0).toFixed(6)}</td>
+          <td>${token.price ? '$' + token.price.toFixed(2) : 'N/A'}</td>
+          <td>${token.usdValue ? '$' + token.usdValue.toFixed(2) : 'N/A'}</td>
         </tr>
-      `;
+      `).join('');
+    } else if (tokensTableBody) {
+      tokensTableBody.innerHTML = '<tr><td colspan="4">No tokens found</td></tr>';
+    }
+
+    showResults();
+    setupLeaderboardActions();
+  }
+
+  function setupLeaderboardActions() {
+    // Set up join/leave leaderboard buttons
+    const joinBtn = document.getElementById('join-leaderboard');
+    const leaveBtn = document.getElementById('leave-leaderboard');
+    
+    if (joinBtn) {
+      joinBtn.addEventListener('click', handleOptIn);
+    }
+    if (leaveBtn) {
+      leaveBtn.addEventListener('click', () => handleOptOut(getCurrentWalletAddress()));
+    }
+  }
+
+  // ========== LEADERBOARD FUNCTIONS ==========
+  
+  async function loadLeaderboardWithPagination(type = 'transactions', page = 1, search = '') {
+    try {
+      showLoadingSpinner();
+      
+      console.log(`📊 Loading ${type} leaderboard, page ${page}, search: ${search}`);
+      
+      const params = new URLSearchParams({
+        page: page,
+        limit: 50,
+        ...(search && { search: search })
+      });
+      
+      const response = await fetch(`/api/leaderboard/${type}?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        currentLeaderboardPage = data.pagination.currentPage;
+        totalLeaderboardPages = data.pagination.totalPages;
+        leaderboardSearch = search;
+        
+        displayLeaderboard(data.leaderboard, type);
+        displayPaginationControls(data.pagination, type);
+        
+        // Update URL without page reload
+        const url = new URL(window.location);
+        url.searchParams.set('page', page);
+        if (search) {
+          url.searchParams.set('search', search);
+        } else {
+          url.searchParams.delete('search');
+        }
+        window.history.replaceState({}, '', url);
+        
+      } else {
+        showMessage('Failed to load leaderboard: ' + data.error, 'error');
+      }
+    } catch (error) {
+      showMessage('Error loading leaderboard: ' + error.message, 'error');
+    } finally {
+      hideLoadingSpinner();
+    }
+  }
+
+  function displayLeaderboard(users, type) {
+    if (!leaderboardBody) {
+      console.warn('Leaderboard body element not found');
+      return;
+    }
+    
+    if (!users || users.length === 0) {
+      leaderboardBody.innerHTML = '<tr><td colspan="6">No users found on the leaderboard.</td></tr>';
       return;
     }
 
-    data.forEach((user, index) => {
-      const row = document.createElement('tr');
-      const rankClass = index < 3 ? `rank-${index + 1}` : 'rank-other';
-      
-      row.innerHTML = `
-        <td>
-          <span class="rank-badge ${rankClass}">
-            ${user.rank}
-          </span>
+    leaderboardBody.innerHTML = users.map(user => `
+      <tr>
+        <td class="rank-cell">#${user.rank}</td>
+        <td class="address-cell">
+          <span class="address-short">${user.address.slice(0, 6)}...${user.address.slice(-4)}</span>
+          <button class="copy-btn" onclick="window.copyAddress('${user.address}')" title="Copy address">📋</button>
         </td>
-        <td>
-          <span class="address-short">
-            ${user.address.substring(0, 6)}...${user.address.substring(user.address.length - 4)}
-          </span>
-        </td>
-        <td><strong>${user.transaction_count}</strong></td>
-        <td><strong>${formatUSD(user.total_usd_value)}</strong></td>
-        <td><strong>${user.unique_chains}</strong></td>
-        <td><strong>${user.unique_tokens}</strong></td>
-      `;
-
-      // Highlight current user
-      const currentAddress = getCurrentWalletAddress() || addressInput.value.trim();
-      if (currentAddress && user.address.toLowerCase() === currentAddress.toLowerCase()) {
-        row.style.background = 'rgba(255, 215, 0, 0.2)';
-        row.style.border = '2px solid rgba(255, 215, 0, 0.5)';
-      }
-
-      leaderboardBody.appendChild(row);
-    });
+        <td class="number-cell">${(user.transaction_count || 0).toLocaleString()}</td>
+        <td class="currency-cell">$${(user.total_usd_value || 0).toLocaleString()}</td>
+        <td class="number-cell">${user.unique_chains || 0}</td>
+        <td class="number-cell">${user.unique_tokens || 0}</td>
+      </tr>
+    `).join('');
   }
 
+  function displayPaginationControls(pagination, type) {
+    let container = document.getElementById('pagination-controls');
+    if (!container) {
+      container = createPaginationContainer();
+    }
+    
+    let html = '<div class="pagination-info">';
+    html += `<span>Showing ${(pagination.currentPage - 1) * pagination.limit + 1}-${Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} of ${pagination.totalUsers} users</span>`;
+    html += '</div>';
+    
+    html += '<div class="pagination-buttons">';
+    
+    // Previous button
+    if (pagination.hasPrevPage) {
+      html += `<button onclick="window.loadLeaderboardWithPagination('${type}', ${pagination.prevPage}, '${leaderboardSearch}')" class="btn btn-secondary">← Previous</button>`;
+    }
+    
+    // Page numbers
+    const startPage = Math.max(1, pagination.currentPage - 2);
+    const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+    
+    if (startPage > 1) {
+      html += `<button onclick="window.loadLeaderboardWithPagination('${type}', 1, '${leaderboardSearch}')" class="btn btn-secondary">1</button>`;
+      if (startPage > 2) html += '<span>...</span>';
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      const activeClass = i === pagination.currentPage ? 'btn-primary' : 'btn-secondary';
+      html += `<button onclick="window.loadLeaderboardWithPagination('${type}', ${i}, '${leaderboardSearch}')" class="btn ${activeClass}">${i}</button>`;
+    }
+    
+    if (endPage < pagination.totalPages) {
+      if (endPage < pagination.totalPages - 1) html += '<span>...</span>';
+      html += `<button onclick="window.loadLeaderboardWithPagination('${type}', ${pagination.totalPages}, '${leaderboardSearch}')" class="btn btn-secondary">${pagination.totalPages}</button>`;
+    }
+    
+    // Next button
+    if (pagination.hasNextPage) {
+      html += `<button onclick="window.loadLeaderboardWithPagination('${type}', ${pagination.nextPage}, '${leaderboardSearch}')" class="btn btn-secondary">Next →</button>`;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  function createPaginationContainer() {
+    const container = document.createElement('div');
+    container.id = 'pagination-controls';
+    container.className = 'pagination-controls';
+    
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    if (leaderboardSection) {
+      leaderboardSection.appendChild(container);
+    }
+    
+    return container;
+  }
+
+  function addLeaderboardSearch() {
+    if (document.getElementById('leaderboard-search')) {
+      return;
+    }
+    
+    const searchHtml = `
+      <div class="leaderboard-search">
+        <input type="text" id="leaderboard-search" placeholder="Search by address..." />
+        <button onclick="window.searchLeaderboard()" class="btn btn-primary">Search</button>
+        <button onclick="window.clearLeaderboardSearch()" class="btn btn-secondary">Clear</button>
+      </div>
+    `;
+    
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    if (leaderboardSection) {
+      leaderboardSection.insertAdjacentHTML('afterbegin', searchHtml);
+    }
+  }
+
+  // ========== USER RANK FUNCTIONS ==========
+  
   async function loadUserRank(address) {
     try {
       const response = await fetch(`/api/user-rank/${address}`);
       const data = await response.json();
-
+      
       if (data.success) {
         displayUserRank(data);
-        userRankCard.classList.remove('hidden');
-      } else {
-        // Even if user is not in leaderboard, show the rank card
-        console.log('User not found in leaderboard, but showing rank card for opt-in');
-        userRankCard.classList.remove('hidden');
-        
-        // Set default values
-        document.getElementById('user-rank-transactions').textContent = 'Not ranked';
-        document.getElementById('user-rank-volume').textContent = 'Not ranked';
-        document.getElementById('user-rank-chains').textContent = 'Not ranked';
-        document.getElementById('user-rank-tokens').textContent = 'Not ranked';
-        
-        // Update button based on wallet connection
-        const currentAddress = getCurrentWalletAddress();
-        const addressMatches = currentAddress && 
-          currentAddress.toLowerCase() === address.toLowerCase();
-
-        if (addressMatches) {
-          optInBtn.textContent = '🏆 Join Leaderboard';
-          optInBtn.disabled = false;
-        } else {
-          optInBtn.textContent = '🔐 Connect wallet to join';
-          optInBtn.disabled = true;
-        }
-        
-        removeOptOutButton();
+        updateLeaderboardButtons(data.userStats);
       }
-    } catch (err) {
-      console.error('User rank error:', err);
-      // Still show the rank card for opt-in
-      userRankCard.classList.remove('hidden');
-      
-      // Set default values
-      document.getElementById('user-rank-transactions').textContent = 'Not ranked';
-      document.getElementById('user-rank-volume').textContent = 'Not ranked';
-      document.getElementById('user-rank-chains').textContent = 'Not ranked';
-      document.getElementById('user-rank-tokens').textContent = 'Not ranked';
-      
-      // Update button
-      const currentAddress = getCurrentWalletAddress();
-      if (currentAddress) {
+    } catch (error) {
+      console.error('Error loading user rank:', error);
+    }
+  }
+
+function displayUserRank(data) {
+  const { userStats, ranks } = data;
+  
+  if (!userStats) return;
+
+  // Use existing user-rank-card from HTML
+  const userRankCard = document.getElementById('user-rank-card');
+  if (userRankCard) {
+    // Update the existing card
+    document.getElementById('user-rank-transactions').textContent = `#${ranks.transactions || 'N/A'}`;
+    document.getElementById('user-rank-volume').textContent = `#${ranks.volume || 'N/A'}`;
+    document.getElementById('user-rank-chains').textContent = `#${ranks.chains || 'N/A'}`;
+    document.getElementById('user-rank-tokens').textContent = `#${ranks.tokens || 'N/A'}`;
+    
+    // Show the card
+    userRankCard.classList.remove('hidden');
+    
+    // Update opt-in button
+    const optInBtn = document.getElementById('opt-in-btn');
+    if (optInBtn) {
+      if (userStats.opt_in_leaderboard) {
+        optInBtn.textContent = '❌ Leave Leaderboard';
+        optInBtn.onclick = () => handleOptOut(userStats.address);
+      } else {
         optInBtn.textContent = '🏆 Join Leaderboard';
-        optInBtn.disabled = false;
-      } else {
-        optInBtn.textContent = '🔐 Connect wallet to join';
-        optInBtn.disabled = true;
+        optInBtn.onclick = () => handleOptIn();
       }
-      
-      removeOptOutButton();
     }
   }
-  
-  // Helper functions
-  function hideAllSections() {
-    loadingSection.classList.add('hidden');
-    resultsSection.classList.add('hidden');
-    errorSection.classList.add('hidden');
-    
-    if (refreshAnalysisBtn) {
-      refreshAnalysisBtn.classList.add('hidden');
-    }
-    
-    // Remove any existing cache indicators
-    const existingIndicator = document.querySelector('.cache-indicator');
-    if (existingIndicator) {
-      existingIndicator.remove();
-    }
-
-    // Hide user rank card when clearing results
-    userRankCard.classList.add('hidden');
-    removeOptOutButton();
-  }
-  
-  function formatAddress(address) {
-    if (!address || address.length < 10) return address;
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  }
-  
-  function formatUSD(num) {
-    if (typeof num !== 'number' || isNaN(num)) return '(unknown)';
-    if (num === 0) return "$0.00";
-    if (num < 0.01) return "$<0.01";
-    if (num < 1) return "$" + num.toFixed(2);
-    if (num < 1000) return "$" + num.toFixed(2);
-    if (num < 1000000) return "$" + (num/1000).toFixed(1) + "K";
-    return "$" + (num/1000000).toFixed(1) + "M";
-  }
-  
-  function formatNumber(num) {
-    if (num === 0) return "0";
-    if (num < 0.000001) return num.toExponential(6);
-    return num.toFixed(6).replace(/\.?0+$/, "");
-  }
-
-  function showMessage(message, type = 'info') {
-    // Enhanced message display
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-toast ${type}`;
-    messageDiv.textContent = message;
-    messageDiv.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      z-index: 10000;
-      max-width: 300px;
-      background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#6c757d'};
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    
-    document.body.appendChild(messageDiv);
-    
-    // Auto remove after 4 seconds
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        messageDiv.parentNode.removeChild(messageDiv);
-      }
-    }, 4000);
-  }
-  function debugWalletAvailability() {
-  console.log('=== WALLET DEBUG INFO ===');
-  console.log('window.solana:', !!window.solana);
-  console.log('window.solana.isPhantom:', window.solana?.isPhantom);
-  console.log('window.solflare:', !!window.solflare);
-  console.log('window.solflare.isConnected:', window.solflare?.isConnected);
-  console.log('window.backpack:', !!window.backpack);
-  console.log('window.backpack.isBackpack:', window.backpack?.isBackpack);
-  console.log('connectedWalletType:', connectedWalletType);
-  console.log('currentConnectedAddress:', currentConnectedAddress);
-  console.log('bs58 available:', typeof bs58 !== 'undefined');
-  console.log('========================');
 }
 
-  // Initialize leaderboard on page load
-  loadLeaderboard('transactions');
+  function updateLeaderboardButtons(userStats) {
+    const joinBtn = document.getElementById('join-leaderboard');
+    const leaveBtn = document.getElementById('leave-leaderboard');
+    
+    if (joinBtn && leaveBtn) {
+      if (userStats && userStats.opt_in_leaderboard) {
+        joinBtn.style.display = 'none';
+        leaveBtn.style.display = 'inline-block';
+      } else {
+        joinBtn.style.display = 'inline-block';
+        leaveBtn.style.display = 'none';
+      }
+    }
+  }
+
+  // ========== OPT-IN/OUT FUNCTIONS ==========
+  
+async function handleOptIn() {
+  try {
+    const currentAddress = getCurrentWalletAddress();
+    if (!currentAddress) {
+      showMessage('Please connect a wallet first', 'error');
+      return;
+    }
+
+    console.log('🔄 Starting opt-in process...');
+    showMessage('Preparing signature request...', 'info');
+
+    // Get signature message
+    const messageData = await getSignatureMessage(currentAddress, 'join');
+    
+    showMessage('Please sign the message in your wallet...', 'info');
+    
+    // Sign the message
+    const signature = await signMessageWithWallet(messageData, currentAddress);
+    
+    showMessage('Submitting to leaderboard...', 'info');
+    
+    // Submit to server
+    const response = await fetch('/api/leaderboard/update-opt-in', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address: currentAddress,
+        optIn: true,
+        signature: signature,
+        message: messageData.message,
+        timestamp: messageData.timestamp,
+        nonce: messageData.nonce
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage('Successfully joined the leaderboard!', 'success');
+      await loadUserRank(currentAddress);
+      loadLeaderboardWithPagination(currentLeaderboardType, currentLeaderboardPage, leaderboardSearch);
+    } else {
+      showMessage('Failed to join leaderboard: ' + data.error, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Opt-in error:', error);
+    
+    if (error.message.includes('User rejected')) {
+      showMessage('Signature was cancelled by user', 'info');
+    } else {
+      showMessage('Failed to join leaderboard: ' + error.message, 'error');
+    }
+  }
+}
+
+async function handleOptOut(address) {
+  try {
+    if (!confirm('Are you sure you want to leave the leaderboard? You can rejoin anytime.')) {
+      return;
+    }
+
+    console.log('🔄 Starting opt-out process...');
+    showMessage('Preparing signature request...', 'info');
+
+    // Get signature message
+    const messageData = await getSignatureMessage(address, 'leave');
+    
+    showMessage('Please sign the message in your wallet...', 'info');
+    
+    // Sign the message
+    const signature = await signMessageWithWallet(messageData, address);
+    
+    showMessage('Submitting to leaderboard...', 'info');
+    
+    // Submit to server
+    const response = await fetch('/api/leaderboard/update-opt-in', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address: address,
+        optIn: false,
+        signature: signature,
+        message: messageData.message,
+        timestamp: messageData.timestamp,
+        nonce: messageData.nonce
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage('Successfully left the leaderboard', 'info');
+      await loadUserRank(address);
+      loadLeaderboardWithPagination(currentLeaderboardType, currentLeaderboardPage, leaderboardSearch);
+    } else {
+      showMessage('Failed to leave leaderboard: ' + data.error, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Opt-out error:', error);
+    
+    if (error.message.includes('User rejected')) {
+      showMessage('Signature was cancelled by user', 'info');
+    } else {
+      showMessage('Failed to leave leaderboard: ' + error.message, 'error');
+    }
+  }
+}
+
+  // ========== SIGNATURE FUNCTIONS ==========
+  
+async function getSignatureMessage(address, action) {
+  try {
+    console.log(`🔐 Getting signature message for ${action}...`);
+    
+    const response = await fetch('/api/leaderboard/get-signature-message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        address: address, 
+        action: action 
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('✅ Signature message received');
+      return {
+        message: data.message,
+        timestamp: data.timestamp,
+        nonce: data.nonce
+      };
+    } else {
+      throw new Error(data.error || 'Failed to get signature message');
+    }
+  } catch (error) {
+    console.error('Error getting signature message:', error);
+    throw error;
+  }
+}
+
+// Replace the signMessageWithWallet function (around line 600) with this:
+
+async function signMessageWithWallet(messageData, address) {
+  try {
+    const { message } = messageData;
+    console.log('🔐 Signing message with wallet...');
+    console.log('Message to sign:', message);
+    console.log('Connected wallet type:', connectedWalletType);
+    
+    if (address.startsWith('0x')) {
+      // Ethereum signature with MetaMask
+      console.log('🦊 Signing with MetaMask...');
+      
+      if (typeof window.ethereum === 'undefined') {
+        throw new Error('MetaMask not available');
+      }
+
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [message, address]
+      });
+      
+      console.log('✅ Ethereum signature completed');
+      return signature;
+      
+    } else {
+      // Solana signature
+      console.log('🌞 Signing with Solana wallet...');
+      
+      const messageBytes = new TextEncoder().encode(message);
+      console.log('Message bytes length:', messageBytes.length);
+      
+      let signResult;
+      
+      // Handle different Solana wallets
+      if (connectedWalletType === 'phantom' && window.solana?.isPhantom) {
+        console.log('👻 Using Phantom wallet...');
+        try {
+          signResult = await window.solana.signMessage(messageBytes, 'utf8');
+        } catch (error) {
+          console.error('Phantom signing error:', error);
+          throw new Error(`Phantom signing failed: ${error.message}`);
+        }
+      } 
+      else if (connectedWalletType === 'backpack' && window.backpack) {
+        console.log('🎒 Using Backpack wallet...');
+        try {
+          // Backpack uses a different signing method
+          console.log('Backpack signMessage method:', typeof window.backpack.signMessage);
+          
+          // Try different Backpack signing approaches
+          if (window.backpack.signMessage) {
+            signResult = await window.backpack.signMessage(messageBytes);
+          } else if (window.backpack.sign) {
+            signResult = await window.backpack.sign(messageBytes);
+          } else {
+            throw new Error('Backpack wallet does not support message signing');
+          }
+          
+          console.log('Backpack raw sign result:', signResult);
+          
+        } catch (error) {
+          console.error('Backpack signing error details:', error);
+          throw new Error(`Backpack signing failed: ${error.message}`);
+        }
+      } 
+      else if (connectedWalletType === 'solflare' && window.solflare) {
+        console.log('🔥 Using Solflare wallet...');
+        try {
+          signResult = await window.solflare.signMessage(messageBytes, 'utf8');
+        } catch (error) {
+          console.error('Solflare signing error:', error);
+          throw new Error(`Solflare signing failed: ${error.message}`);
+        }
+      } 
+      else {
+        throw new Error(`No supported Solana wallet found. Connected type: ${connectedWalletType}`);
+      }
+      
+      console.log('Raw sign result:', signResult);
+      console.log('Sign result type:', typeof signResult);
+      console.log('Sign result keys:', Object.keys(signResult || {}));
+      
+      // Process the signature result
+      const processedSignature = handleSolanaSignResult(signResult, connectedWalletType);
+      console.log('✅ Solana signature completed');
+      
+      return processedSignature;
+    }
+  } catch (error) {
+    console.error('=== SIGNING ERROR ===');
+    console.error('Error details:', error);
+    console.error('Wallet type:', connectedWalletType);
+    console.error('Address:', address);
+    console.error('====================');
+    throw error;
+  }
+}
+
+// Replace the handleSolanaSignResult function (around line 700) with this:
+
+function handleSolanaSignResult(signResult, walletName) {
+  console.log(`📝 Processing ${walletName} signature result...`);
+  console.log('Result type:', typeof signResult);
+  console.log('Result:', signResult);
+  console.log('Result keys:', Object.keys(signResult || {}));
+  
+  try {
+    let signature;
+    
+    // Handle Backpack wallet specifically
+    if (walletName === 'backpack') {
+      console.log('🎒 Processing Backpack signature...');
+      
+      // Backpack might return different formats
+      if (signResult && signResult.signature) {
+        console.log('Format: Backpack signature property');
+        signature = signResult.signature;
+      } else if (signResult && signResult.data) {
+        console.log('Format: Backpack data property');
+        signature = signResult.data;
+      } else if (signResult instanceof Uint8Array) {
+        console.log('Format: Backpack direct Uint8Array');
+        signature = signResult;
+      } else if (Array.isArray(signResult)) {
+        console.log('Format: Backpack direct Array');
+        signature = new Uint8Array(signResult);
+      } else {
+        console.error('Unknown Backpack signature format:', signResult);
+        throw new Error('Unknown signature format from Backpack wallet');
+      }
+    }
+    // Handle other wallets
+    else if (signResult && signResult.signature) {
+      console.log('Format: signature property found');
+      signature = signResult.signature;
+    } else if (signResult instanceof Uint8Array) {
+      console.log('Format: direct Uint8Array');
+      signature = signResult;
+    } else if (Array.isArray(signResult)) {
+      console.log('Format: direct Array');
+      signature = new Uint8Array(signResult);
+    } else {
+      console.error('Unknown signature format:', signResult);
+      throw new Error(`Unknown signature format from ${walletName}`);
+    }
+    
+    // Ensure it's a Uint8Array
+    if (!(signature instanceof Uint8Array)) {
+      if (Array.isArray(signature)) {
+        signature = new Uint8Array(signature);
+      } else if (typeof signature === 'string') {
+        // If it's already base58 encoded, return it
+        console.log('Signature appears to be base58 string:', signature.length);
+        return signature;
+      } else {
+        throw new Error(`Cannot convert signature to Uint8Array from ${walletName}`);
+      }
+    }
+    
+    console.log('Signature length:', signature.length);
+    
+    // Encode to base58
+    const encoded = window.base58Encode(signature);
+    console.log('✅ Base58 encoded signature length:', encoded.length);
+    
+    return encoded;
+    
+  } catch (error) {
+    console.error(`❌ Error processing ${walletName} signature:`, error);
+    throw error;
+  }
+}
+
+  // ========== SEARCH FUNCTIONS ==========
+  
+  function searchLeaderboard() {
+    const searchInput = document.getElementById('leaderboard-search');
+    const search = searchInput ? searchInput.value.trim() : '';
+    loadLeaderboardWithPagination(currentLeaderboardType, 1, search);
+  }
+
+  function clearLeaderboardSearch() {
+    const searchInput = document.getElementById('leaderboard-search');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    loadLeaderboardWithPagination(currentLeaderboardType, 1, '');
+  }
+
+  // ========== UTILITY FUNCTIONS ==========
+  
+  function getCurrentWalletAddress() {
+    return currentConnectedAddress;
+  }
+
+  function showLoading() {
+    if (loadingDiv) loadingDiv.classList.remove('hidden');
+  }
+
+  function hideLoading() {
+    if (loadingDiv) loadingDiv.classList.add('hidden');
+  }
+
+  function showResults() {
+    if (resultsDiv) resultsDiv.classList.remove('hidden');
+  }
+
+  function hideResults() {
+    if (resultsDiv) resultsDiv.classList.add('hidden');
+  }
+
+  function showError(message, troubleshooting = []) {
+    if (errorDiv) {
+      const errorText = document.getElementById('error-text');
+      const troubleshootingList = document.getElementById('troubleshooting-list');
+      
+      if (errorText) errorText.textContent = message;
+      
+      if (troubleshootingList && troubleshooting.length > 0) {
+        troubleshootingList.innerHTML = troubleshooting.map(tip => `<li>${tip}</li>`).join('');
+      }
+      
+      errorDiv.classList.remove('hidden');
+    }
+  }
+
+  function hideError() {
+    if (errorDiv) errorDiv.classList.add('hidden');
+  }
+
+  function showLoadingSpinner() {
+    if (leaderboardLoading) leaderboardLoading.classList.remove('hidden');
+    if (leaderboardTable) leaderboardTable.classList.add('hidden');
+  }
+
+  function hideLoadingSpinner() {
+    if (leaderboardLoading) leaderboardLoading.classList.add('hidden');
+    if (leaderboardTable) leaderboardTable.classList.remove('hidden');
+  }
+
+  function showMessage(message, type) {
+    let messageContainer = document.getElementById('message-container');
+    if (!messageContainer) {
+      messageContainer = document.createElement('div');
+      messageContainer.id = 'message-container';
+      messageContainer.className = 'message-container';
+      messageContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+      `;
+      document.body.appendChild(messageContainer);
+    }
+
+    const messageElement = document.createElement('div');
+    messageElement.className = `message message-${type}`;
+    messageElement.style.cssText = `
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      font-weight: 500;
+      animation: slideIn 0.3s ease-out;
+      ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : ''}
+      ${type === 'error' ? 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;' : ''}
+      ${type === 'info' ? 'background: #cce7ff; color: #004085; border: 1px solid #99d5ff;' : ''}
+    `;
+    messageElement.textContent = message;
+    messageContainer.appendChild(messageElement);
+
+    setTimeout(() => {
+      if (messageElement.parentNode) {
+        messageElement.parentNode.removeChild(messageElement);
+      }
+    }, 5000);
+  }
+
+  // ========== GLOBAL FUNCTIONS FOR ONCLICK HANDLERS ==========
+  
+  window.loadLeaderboardWithPagination = loadLeaderboardWithPagination;
+  window.searchLeaderboard = searchLeaderboard;
+  window.clearLeaderboardSearch = clearLeaderboardSearch;
+  window.copyAddress = function(address) {
+    navigator.clipboard.writeText(address).then(() => {
+      showMessage('Address copied to clipboard!', 'success');
+    }).catch(() => {
+      showMessage('Failed to copy address', 'error');
+    });
+  };
+
+  console.log('✅ Relay Stats App loaded successfully!');
 });
