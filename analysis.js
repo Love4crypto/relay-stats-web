@@ -200,17 +200,7 @@ async function fetchTransactions(address, forceRefresh = false) {
             
             transactions.push(...newTxs);
             console.log(`✅ Added ${newTxs.length} new unique transactions (total: ${transactions.length})`);
-            
-            // CHECK FOR YOUR SPECIFIC TRANSACTION
-            const yourTxId = '0x632b59c53d2585391bdffb245472236f1c1599819eca8996890bc4ee2c1d2568';
-            const foundYourTx = pageTransactions.find(tx => tx.id === yourTxId);
-            if (foundYourTx) {
-              console.log(`🎯 FOUND YOUR TRANSACTION on page ${pageCount}!`);
-              console.log(`   ID: ${foundYourTx.id}`);
-              console.log(`   Date: ${foundYourTx.createdAt}`);
-              console.log(`   Status: ${foundYourTx.status}`);
-            }
-            
+                               
             continuation = response.data.continuation;
             console.log(`🔗 Continuation token: ${continuation ? 'YES' : 'NO'}`);
             retryCount = 0;
@@ -254,18 +244,7 @@ async function fetchTransactions(address, forceRefresh = false) {
       .forEach((tx, i) => {
         console.log(`   ${i + 1}. ${tx.id.substring(0, 20)}... - ${tx.createdAt} - Status: ${tx.status}`);
       });
-    
-    // Check if your specific transaction is in the final array
-    const yourTxId = '0x632b59c53d2585391bdffb245472236f1c1599819eca8996890bc4ee2c1d2568';
-    const yourTx = transactions.find(tx => tx.id === yourTxId);
-    console.log(`\n🎯 Your specific transaction in final results: ${yourTx ? '✅ YES' : '❌ NO'}`);
-    
-    if (yourTx) {
-      console.log(`   Found at index: ${transactions.indexOf(yourTx)}`);
-      console.log(`   Transaction date: ${yourTx.createdAt}`);
-      console.log(`   Transaction status: ${yourTx.status}`);
-    }
-    
+       
     // Cache the results
     const cacheData = {
       timestamp: Date.now(),
