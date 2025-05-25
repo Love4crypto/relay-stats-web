@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Relay Stats Analyzer</title>
-  <link rel="stylesheet" href="styles.css?v=1.0.2">
+  <link rel="stylesheet" href="styles.css?v=1.0.3">
+   <script src="https://cdn.jsdelivr.net/npm/bs58@4.0.1/index.min.js"></script>
 <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
 <!-- Favicons -->
@@ -58,9 +59,8 @@
         <div id="wallet-status">Not connected</div>
         <button id="disconnect-btn" class="disconnect-button hidden">Disconnect</button>
       </div>
-	  <!-- ADD THIS REFRESH BUTTON HERE -->
-<button id="refresh-analysis-btn" class="refresh-button hidden">🔄 Refresh Data</button>
-
+      
+      <button id="refresh-analysis-btn" class="refresh-button hidden">🔄 Refresh Data</button>
       
       <button id="connect-wallet-btn" class="connect-wallet-button">Connect Wallet</button>
       <p class="subtitle">Connect your wallet to see your cross-chain activity</p>
@@ -106,7 +106,7 @@
                 <span>Solflare</span>
               </button>
               <button id="connect-backpack" class="wallet-button">
-                <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAMAAzAMBEQACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAAAQYEBQcCA//EADkQAQABAgMDBg0DBQEAAAAAAAABAgMEBREGFiESQXORkuETMTI1QlFTVGFjcZPRFSKBFCMlNMFS/8QAGwEBAAEFAQAAAAAAAAAAAAAAAAQBAgMFBgf/xAAwEQEAAQMCAwcDAwUBAAAAAAAAAQIDBBFRBRQhEhMVFjEyUgY0cSJBkSRCYYHRM//aAAwDAQACEQMRAD8A4aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACdANAQAAAAAAAAAAAAAAAAAAAAAD1oK6Nrl+z+PxtMXKbXg7c+Ku5wY6rtNLZY3CsjI6xGkby2VGx2ImP3Yu3E+rkzLFzNOyfH07fn1rh8b+yOOopmbV21cn1cYXRkUyx3OAZNMaxMS0mKwl/CXPB4m1VbrjmqZomJ9Gmu2Llmrs3I0fCY0VYkAAAAAAAAAAAAAAAAAAAAsWzmGwFvXGZjetxFE/26Kp5/Ww3ZqmNIbrhVvGpq72/MdP2WKraPKqatP6jWfXFMyi9xW6LxrDpjSKuiN5Mr94nsydzXseOYfyN5Mr0/wBiexJ3Fex43h/J88ZjsmzXDzh7uJo1nyZnhNM+tdRRconVhyMvAzaJoqqUbF2vAX67XKirkzpyo8UpsTrDjLlHYrmmOr4qrAAAAAAAAAAAAAAAAAAHqKfiDIsYXEYiYixZrr5v2wpNUR6yy27Fy5P6KWVGRZpVxjB3NP4Wd7RulRw3Ln+yU/oGae53OuDvaN1fC8v4H6Bmmn+nc64O9o3PC8z4Me/l+NsUa3sPcpiPguiumfSWC5iZFv30yxao1lcjy8yKIAAAAAAAAAAAAAAAAB9LVqq7XTRbiaqquERHOpM6eq6mia5immOsrjk+y9qzTTezD+5c8cW/Rp+qLdv7Os4fwOiiO8v9Z2WOi3Rbpim3TFFMc1MaIszMuiotUW40pjR6hReKmv8Ak0U0g1/yTxjSVfT0Ummmf2arM8hwWPpmYoi1e/8AdH/WWm9VS1WXwfHyImYjSd4UnM8rxGXX/B4iOE+TXHiqhNorpqjo47MwruLX2bn8sGeEr0NAAAAAAAAAAAAAAAPVMAueyGVxas/116n99caW4n0Y9f8AKJfuf2w67gWB2aeYrjrPosqK6UUGk2hzyMtpi1Y0qv1Rrx9GPWkWbXa6y0fFeKxjR2LfulT72a4+7XNVeKua/CdIS4t0xHo5OvPybk9qa5bDKNpMVhrtNOKrm9Z54nxwsrsRVHRPw+M3rNURcnWleLN2i9apu2quVRVGtM/BAmJidJdtauU3aIrp9JexexswwVrH4WqxeiNJjhOnkz611uvs1IuXiUZNuaKoc4xuFuYTFXLF6NK6J0+vxbGmqJjWHnuRYrs3Zt1+sMaVzAgAAAAAAAAAAAAAGVl1icVjLFin064iVtU6Uyz41qbt2miP3dOt0U2qKaKY0imNIhrZ6zq9JooiimKYelq8VHN89uVXc3xlVeusXZiPpHBsrcfph5zxCuasmuZ3a6V6EmnhxBfdj7lVeTxFU68m5VEfRByIiK3b8ArmrF67t2wN4KCrba4TWm1i6Y4+RV/xLx6/2cr9RYvtvUwp8pblkAAAAAAAAAAAAAA3ux9vl5xRVpwooqlhvzpQ2/BKO1mROy+te7wABSdrcsrsYuvF0RrauzxmPRlPs3ImNHE8awZtXe9j2yrkwztE+mGtV3r1Nu1TNVdU6REKTMRGsr7duq5VFFPrLpGT4KMvy+1Y4cqI1qmOeZa+5V2qtXoXDsXlrEUfuzWNOFBrdo7fhcmxMaa8mnlR/DLZn9bV8Yt9vDrc4lsXAIAAAAAAAAAAAAABY9iPOdzopR8j2N79P/dT+F3QnbCgA83KKblE0V0xVTPjiY1iVYmY9FtdFNcaVRrDUXtmMsuXJqi3co15qa9IZoyK46NRc4DiV1dqImPwzcBleEwET/TWYpmfHXPGqf5WVXKqvVMxeH4+N/5x/wBZixOkUUAYmb+bMV0Uslv3whcR+0ufhzBsnnIAAAAAAAAAAAAACx7EecrnRSj5Psb36f8Aup/C7oLtgAAAAAAAGJm3mzFdFLJb98IXEftLn4cwbJ5yAAAAAAAAAAAAAAsexEf5K50UsGT7G9+n5/qv9LugO21A1A1A1A1A1A1A1A1Ymb8MrxUz4vBSyW/fCFxGf6S5+HMWyecoAAAAAAAAAAAAABk4LFXsHepvYerk10raoieks1i/csV9u36ttvXmfyOx3sfcUNn47m7wb2Zn8nsd53FtXx3N3g3szP5PY7zuLZ47m7wb2Zn8nsd53Fs8dzd4N7Mz+T2O87i2eO5u8fwb2Zn8nsd53Fs8dzd4N7Mz+T2O87i2eO5u8G9mZ/J7HedxbPHc3eDevM/kdjvO4tqeO5u8fw+GNz/H42xNm9XRTRV5XIp01XU2aaZ1hgyOK5WRR2K56NRLI1qAAAAAAAAAAAAAAbPIct/U8b4GappoiOVVMepju19inVP4fic3e7vXRZ90cBz3b3WjcxU6Ty7j7yjdHAe1vdanM1Hl3H3k3RwHtb3WczUeXcfeTdHAe1vdZzNR5dx95N0cB7W91nM1Hl3H3k3RwHtb3WczUeXcfeTdHAe1vdZzNR5dx95N0cB7W91nM1Hl3H3lO6OA9re6zmajy7j7yw812Xw+HwVy9h7tzlURytKueGS3fqmdJQ87gVqzZm5RV6KlOnMlOYQAAAAAAAAAAAAACx7EecrnRSj5Psb36f8Auv8AS7oTthQAAAAAAAYeb+a8V0Uslr3whcS+0r/DmLZPOQAAAAAAAAAAAAAFj2I85XOjlHyfY3v0/wDdT+F3QnbCgAAAAAAAxM2j/GYropZLfvhC4l9pX+HMGyecgAAAAAAAAAAAAALFsVXTTmdVNU8arcxT8ZYMj2N3wGqIyuuy8IDuAAVAAAAABRhZ1XTbynF1VTpHg5hltR+qEDidUU4leuzmcti87QAAAAAAAAAAAAAD7Ye9XYuU3LdU0108YmOZSY16Svt11W6orpnrCxWtsMTTREXMPbuVRHlcrRHnHp19W9t/UGRTERNOr1vle9zo7c/g5andf5jvfCDfK77nb+5P4OXjc8x3vhBvld9zt/cn8HLxueY73wg3yu+52/uT+Dl43PMd74Qb5Xfc7f3J/By8bnmO98IN8rvudH3J/By8bnmO98IN8rvudH3J/By0bq+Y73wgnbK9zYO325/By1O6k/Ud/wCENZm2eYnM4iivSi1HoU8/1ZKLVNDXZnE72X0r6Q1M+OWVrUAAAAAAAAAAAAAAAAAnUDWQNZABAJ1BAJ1BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/2Q==" alt="Backpack">
+                <img src="backpacklogo.png?v=1.0.2" alt="Backpack">
                 <span>Backpack</span>
               </button>
             </div>
@@ -182,7 +182,6 @@
           <tbody id="tokens-tbody"></tbody>
         </table>
       </div>
-      
     </div>
     
     <div id="error-message" class="hidden">
@@ -191,10 +190,112 @@
       <ul id="troubleshooting-list"></ul>
     </div>
 
+    <!-- NEW: Leaderboard Section -->
+    <div class="leaderboard-section">
+      <div class="section-header">
+        <h2>🏆 Relay Bridge Leaderboard</h2>
+        <p>Top users by bridge activity</p>
+      </div>
+
+      <!-- Leaderboard Tabs -->
+      <div class="leaderboard-tabs">
+        <button class="tab-btn active" data-type="transactions">
+          📊 Most Transactions
+        </button>
+        <button class="tab-btn" data-type="volume">
+          💰 Highest Volume
+        </button>
+        <button class="tab-btn" data-type="chains">
+          🔗 Most Chains
+        </button>
+        <button class="tab-btn" data-type="tokens">
+          🪙 Most Tokens
+        </button>
+      </div>
+
+      <!-- Leaderboard Content -->
+      <div id="leaderboard-content" class="leaderboard-content">
+        <div id="leaderboard-loading" class="loading hidden">
+          <div class="spinner"></div>
+          <p>Loading leaderboard...</p>
+        </div>
+
+        <div id="leaderboard-table" class="leaderboard-table hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Address</th>
+                <th>Transactions</th>
+                <th>Volume</th>
+                <th>Chains</th>
+                <th>Tokens</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <!-- Dynamic content -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="leaderboard-error" class="error hidden"></div>
+      </div>
+
+      <!-- User Rank Card (shown after analysis) -->
+      <div id="user-rank-card" class="user-rank-card hidden">
+        <h3>🎯 Your Ranking</h3>
+        <div class="rank-stats">
+          <div class="rank-item">
+            <span class="rank-label">Transactions:</span>
+            <span id="user-rank-transactions" class="rank-value">-</span>
+          </div>
+          <div class="rank-item">
+            <span class="rank-label">Volume:</span>
+            <span id="user-rank-volume" class="rank-value">-</span>
+          </div>
+          <div class="rank-item">
+            <span class="rank-label">Chains:</span>
+            <span id="user-rank-chains" class="rank-value">-</span>
+          </div>
+          <div class="rank-item">
+            <span class="rank-label">Tokens:</span>
+            <span id="user-rank-tokens" class="rank-value">-</span>
+          </div>
+        </div>
+        <button id="opt-in-btn" class="opt-in-btn">
+          🏆 Join Leaderboard
+        </button>
+      </div>
+    </div>
+
+    <!-- Opt-in Modal -->
+    <div id="opt-in-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>🏆 Join the Leaderboard?</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Would you like to add your stats to the public leaderboard?</p>
+          <ul>
+            <li>✅ See your ranking compared to other users</li>
+            <li>✅ Motivate others to use Relay Bridge</li>
+            <li>✅ Only your stats are shown (address truncated)</li>
+            <li>❌ You can opt-out anytime</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button id="opt-in-yes" class="btn-primary">🎯 Yes, Join!</button>
+          <button id="opt-in-no" class="btn-secondary">❌ No Thanks</button>
+        </div>
+      </div>
+    </div>
+
     <footer>
       <p>Relay Stats App | <a href="https://relay.link" target="_blank">Powered by Relay</a></p>
     </footer>
   </div>
+
   <script>
   if (typeof exports === 'undefined') {
     var exports = {};
@@ -214,8 +315,9 @@
   <script src="https://unpkg.com/@solflare-wallet/sdk@latest/dist/index.umd.js"></script>
   
   <!-- Application Code -->
-  <script src="app.js?v=1.0.2"></script>
+  <script src="app.js?v=1.0.3"></script>
 </body>
+
 <footer class="site-footer">
   <div class="footer-top">
     <div class="footer-logo">

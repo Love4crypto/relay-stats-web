@@ -1,1 +1,834 @@
-{"timestamp":1747929873331,"transactions":[{"id":"0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed","status":"success","user":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","data":{"slippageTolerance":"235","failReason":"N/A","fees":{"gas":"32581670562000","fixed":"0","price":"205710868102"},"feesUsd":{"gas":"83319","fixed":"0","price":"526"},"inTxs":[{"fee":"1407457571566","data":{"to":"0xa5f565650890fba1824ee0f21ebbbf660a179934","data":"0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed","from":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","value":"2100000000000000"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-2100000000000000"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"2100000000000000"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"}],"hash":"0x80c158cfc45051ac001d50b5c6c3b638a4d345ca1d40116e846cd46d98081944","block":29309816,"type":"onchain","chainId":8453,"timestamp":1745408979}],"currency":"eth","currencyObject":{},"feeCurrency":"eth","feeCurrencyObject":{"chainId":8453,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"appFees":[],"metadata":{"sender":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","currencyIn":{"currency":{"chainId":8453,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"amount":"2100000000000000","amountFormatted":"0.0021","amountUsd":"3.776853","amountUsdCurrent":"5.602441","minimumAmount":"2100000000000000"},"currencyOut":{"currency":{"chainId":1,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"amount":"2057108681029198","amountFormatted":"0.002057108681029198","amountUsd":"3.699713","amountUsdCurrent":"5.488014","minimumAmount":"2057108681029198"},"rate":"0.9795755623948563"},"price":"2057108681029198","usesExternalLiquidity":false,"timeEstimate":7,"outTxs":[{"fee":"25887528473624","data":{"to":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","data":"0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed","from":"0xf70da97812cb96acdf810712aa562db8dfa3dbef","value":"2057108681029198"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-2057108681029198"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"2057108681029198"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"}],"hash":"0x5fdf91974ac6ce5bee1944da3f8a7794ba64b0eb396b424f8e34de1eb7d9be2f","block":22331510,"type":"onchain","chainId":1,"timestamp":1745408987}]},"referrer":"relay.link/swap","createdAt":"2025-04-23T11:49:40.242Z","updatedAt":"2025-04-23T11:50:23.046Z"},{"id":"0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95","status":"success","user":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","data":{"slippageTolerance":"200","failReason":"N/A","fees":{"gas":"398226819231","fixed":"0","price":"0"},"feesUsd":{"gas":"1018","fixed":"0","price":"0"},"inTxs":[{"fee":"66167058330150","data":{"to":"0xa5f565650890fba1824ee0f21ebbbf660a179934","data":"0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95","from":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","value":"2000000000000000"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-2000000000000000"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"2000000000000000"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"}],"hash":"0x7333b2b1eeb13cc70a8072e961850557572dea92e75af23d04d4911cfa0712e9","block":21887604,"type":"onchain","chainId":1,"timestamp":1740054911}],"currency":"eth","currencyObject":{},"feeCurrency":"eth","feeCurrencyObject":{"chainId":1,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"appFees":[],"metadata":{"sender":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","currencyIn":{"currency":{"chainId":1,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"amount":"2000000000000000","amountFormatted":"0.002","amountUsd":"5.481661","amountUsdCurrent":"5.335658","minimumAmount":"2000000000000000"},"currencyOut":{"currency":{"chainId":8453,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"amount":"1999583330942255","amountFormatted":"0.001999583330942255","amountUsd":"5.485567","amountUsdCurrent":"5.334546","minimumAmount":"1999583330942255"},"rate":"0.9997916654711275"},"price":"1999583330942255","usesExternalLiquidity":false,"timeEstimate":3,"outTxs":[{"fee":"328738672589","data":{"to":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","data":"0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95","from":"0xf70da97812cb96acdf810712aa562db8dfa3dbef","value":"1999583330942255"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-1999583330942255"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"1999583330942255"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"}],"hash":"0x7faa65af7985d949ca998922aa6948b1cbe88dd21d20e1e75be9bdd0caca2c41","block":26632785,"type":"onchain","chainId":8453,"timestamp":1740054917}]},"referrer":"relay.link/swap","createdAt":"2025-02-20T12:35:15.329Z","updatedAt":"2025-02-20T12:35:31.018Z"},{"id":"0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428","status":"success","user":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","data":{"failReason":"N/A","fees":{"gas":"214917873710400","fixed":"0","price":"470000000000"},"feesUsd":{"gas":"549596","fixed":"0","price":"1201"},"inTxs":[{"fee":"858429645209","data":{"to":"0xa5f565650890fba1824ee0f21ebbbf660a179934","data":"0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428","from":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","value":"2350000000000000"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-2350000000000000"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"2350000000000000"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"}],"hash":"0x5f93e27483d7a6c32cac5f943ae325be84963c5a29af56081070bd7c3e3b309a","block":24985990,"type":"onchain","chainId":8453,"timestamp":1736761327}],"currency":"eth","currencyObject":{},"feeCurrency":"eth","feeCurrencyObject":{"chainId":8453,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"appFees":[],"metadata":{"sender":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","currencyIn":{"currency":{"chainId":8453,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"2350000000000000","amountFormatted":"0.00235","amountUsd":"7.433990","minimumAmount":"2350000000000000"},"currencyOut":{"currency":{"chainId":1,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"2134612126289600","amountFormatted":"0.0021346121262896","amountUsd":"6.752632","minimumAmount":"2134612126289600"},"rate":"1"},"price":"2134612126289600","usesExternalLiquidity":false,"timeEstimate":8,"outTxs":[{"fee":"169176080447064","data":{"to":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","data":"0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428","from":"0xf70da97812cb96acdf810712aa562db8dfa3dbef","value":"2134612126289600"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-2134612126289600"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"2134612126289600"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"}],"hash":"0x37ccea683fab1e603df3a5128a08dde30a8cd67e8d9382c1c807515a214e3975","block":21614738,"type":"onchain","chainId":1,"timestamp":1736761343}]},"referrer":"relay.link/swap","createdAt":"2025-01-13T09:42:11.648Z","updatedAt":"2025-01-13T09:42:28.650Z"},{"id":"0xc78842ec8e6fac5ec86f04ae630326f28ccbf32169fa47794ea3454f0006b12d","status":"success","user":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","data":{"failReason":"N/A","fees":{"gas":"4344105305277","fixed":"0","price":"22200000000"},"feesUsd":{"gas":"11108","fixed":"0","price":"56"},"inTxs":[{"fee":"1176536158000","data":{"to":"0xa5f565650890fba1824ee0f21ebbbf660a179934","data":"0x03dd62e5","from":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","value":"115366305305277"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-115366305305277"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"115366305305277"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"}],"hash":"0x372070fc26eb6a9268a957d2515130bb273015f7ae838381067a25a749cfb918","block":269336732,"type":"onchain","chainId":42161,"timestamp":1730319504}],"currency":"eth","currencyObject":{},"feeCurrency":"eth","feeCurrencyObject":{"chainId":42161,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"appFees":[],"metadata":{"sender":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","currencyIn":{"currency":{"chainId":42161,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"115366305305277","amountFormatted":"0.000115366305305277","amountUsd":"0.305776","minimumAmount":"115366305305277"},"currencyOut":{"currency":{"chainId":7777777,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"111000000000000","amountFormatted":"0.000111","amountUsd":"0.294203","minimumAmount":"111000000000000"},"rate":"1"},"price":"111000000000000","usesExternalLiquidity":false,"timeEstimate":3.5,"outTxs":[{"fee":"3609254427882","data":{"to":"0xb90ed4c123843cbfd66b11411ee7694ef37e6e72","data":"0x66e0daa0001e80001ec0001d0240001e01001e01000b777777722d078c97c6ad07d9f36801e653e356ae001e01001e20001d0104a836f32f000b3d423300800fecc8bd801ee0f80d3ec4f9f28f91d6001e01000b720ab9252fd99bd483c14f2e732618ed864abffe001e05000bf64df5c70080e4eb5986c0dd5d5b3bc9e455b560cd001ec0001e044c464721005601001964f43391f0000003dd62e5","from":"0xf70da97812cb96acdf810712aa562db8dfa3dbef","value":"111000000000000"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-111000000000000"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"99900000000000"},"address":"0x7777777f279eba3d3ad8f4e708545291a6fdba8b"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"11100000000000"},"address":"0x6eae3f4cfee04887ec5d9d82ba92d64c3946bef4"}],"hash":"0xd28310692604e75fef97f4bdd084084d2a39de39802ff0c0362644fa7574c896","block":21812834,"type":"onchain","chainId":7777777,"timestamp":1730319507}]},"referrer":"https://zora.co","createdAt":"2024-10-30T20:18:24.468Z","updatedAt":"2024-10-30T20:18:29.585Z"},{"id":"0x00c915c4dc953d54af6862072cf6671b2507e82c07bd7ee223dc71b9a79f6373","status":"success","user":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","data":{"failReason":"N/A","fees":{"gas":"4874646390786","fixed":"0","price":"44400000000"},"feesUsd":{"gas":"12465","fixed":"0","price":"113"},"inTxs":[{"fee":"1048100000000","data":{"to":"0xa5f565650890fba1824ee0f21ebbbf660a179934","data":"0x03dc57f2","from":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6","value":"226919046390786"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-226919046390786"},"address":"0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"226919046390786"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"}],"hash":"0xa7a4c61645596d0a05573d8c2a5e7f765ffb81d74f4c3bfcfd6f24a7a8c076c8","block":269297474,"type":"onchain","chainId":42161,"timestamp":1730309631}],"currency":"eth","currencyObject":{},"feeCurrency":"eth","feeCurrencyObject":{"chainId":42161,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":true}},"appFees":[],"metadata":{"sender":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","recipient":"0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6","currencyIn":{"currency":{"chainId":42161,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"226919046390786","amountFormatted":"0.000226919046390786","amountUsd":"0.607993","minimumAmount":"226919046390786"},"currencyOut":{"currency":{"chainId":7777777,"address":"0x0000000000000000000000000000000000000000","symbol":"ETH","name":"Ether","decimals":18,"metadata":{"logoURI":"https://assets.relay.link/icons/1/light.png","verified":false,"isNative":false}},"amount":"222000000000000","amountFormatted":"0.000222","amountUsd":"0.594813","minimumAmount":"222000000000000"},"rate":"1"},"price":"222000000000000","usesExternalLiquidity":false,"timeEstimate":4,"outTxs":[{"fee":"4043943653372","data":{"to":"0xb90ed4c123843cbfd66b11411ee7694ef37e6e72","data":"0x66e0daa0001e80001ec0001d0240001e01001e01000b777777722d078c97c6ad07d9f36801e653e356ae001e01001e20001d0104a836f32f000b3d423300800fecc8bd801ee0f80d3ec4f9f28f91d6001e02000b97ca30d12b979555e34a0575dd5a0000843f684650001e01000bcd0d83d9e840f8e27d5c2e365fd36500801c05b248001ec0001e07627573746564210053010019c9e86723e0000003dc57f2","from":"0xf70da97812cb96acdf810712aa562db8dfa3dbef","value":"222000000000000"},"stateChanges":[{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"-222000000000000"},"address":"0xf70da97812cb96acdf810712aa562db8dfa3dbef"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"199800000000000"},"address":"0x7777777f279eba3d3ad8f4e708545291a6fdba8b"},{"change":{"data":{"tokenKind":"ft","tokenAddress":"0x0000000000000000000000000000000000000000"},"kind":"token","balanceDiff":"22200000000000"},"address":"0x0a9ae2567493a62b4f54e3d1b34110405c3afdea"}],"hash":"0x3ec97fd35a237a9d06cee244b74a43e68a7ef367fc7f7f782d9e9609eb256081","block":21807897,"type":"onchain","chainId":7777777,"timestamp":1730309633}]},"referrer":"https://zora.co","createdAt":"2024-10-30T17:33:52.022Z","updatedAt":"2024-10-30T17:33:57.197Z"}]}
+{
+  "timestamp": 1748204806919,
+  "transactions": [
+    {
+      "id": "0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed",
+      "status": "success",
+      "user": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+      "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+      "data": {
+        "slippageTolerance": "235",
+        "failReason": "N/A",
+        "fees": {
+          "gas": "32581670562000",
+          "fixed": "0",
+          "price": "205710868102"
+        },
+        "feesUsd": {
+          "gas": "82426",
+          "fixed": "0",
+          "price": "520"
+        },
+        "inTxs": [
+          {
+            "fee": "1407457571566",
+            "data": {
+              "to": "0xa5f565650890fba1824ee0f21ebbbf660a179934",
+              "data": "0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed",
+              "from": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "value": "2100000000000000"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-2100000000000000"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "2100000000000000"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              }
+            ],
+            "hash": "0x80c158cfc45051ac001d50b5c6c3b638a4d345ca1d40116e846cd46d98081944",
+            "block": 29309816,
+            "type": "onchain",
+            "chainId": 8453,
+            "timestamp": 1745408979
+          }
+        ],
+        "currency": "eth",
+        "currencyObject": {},
+        "feeCurrency": "eth",
+        "feeCurrencyObject": {
+          "chainId": 8453,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ether",
+          "decimals": 18,
+          "metadata": {
+            "logoURI": "https://assets.relay.link/icons/1/light.png",
+            "verified": true
+          }
+        },
+        "appFees": [],
+        "metadata": {
+          "sender": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "currencyIn": {
+            "currency": {
+              "chainId": 8453,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": true
+              }
+            },
+            "amount": "2100000000000000",
+            "amountFormatted": "0.0021",
+            "amountUsd": "3.776853",
+            "amountUsdCurrent": "5.295248",
+            "minimumAmount": "2100000000000000"
+          },
+          "currencyOut": {
+            "currency": {
+              "chainId": 1,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": true
+              }
+            },
+            "amount": "2057108681029198",
+            "amountFormatted": "0.002057108681029198",
+            "amountUsd": "3.699713",
+            "amountUsdCurrent": "5.184521",
+            "minimumAmount": "2057108681029198"
+          },
+          "rate": "0.9795755623948563"
+        },
+        "price": "2057108681029198",
+        "usesExternalLiquidity": false,
+        "timeEstimate": 7,
+        "outTxs": [
+          {
+            "fee": "25887528473624",
+            "data": {
+              "to": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "data": "0xad7c6b11ad3752feb476eb22f838480a90e86a19856a042bcb97900b796023ed",
+              "from": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+              "value": "2057108681029198"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-2057108681029198"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "2057108681029198"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              }
+            ],
+            "hash": "0x5fdf91974ac6ce5bee1944da3f8a7794ba64b0eb396b424f8e34de1eb7d9be2f",
+            "block": 22331510,
+            "type": "onchain",
+            "chainId": 1,
+            "timestamp": 1745408987
+          }
+        ]
+      },
+      "referrer": "relay.link/swap",
+      "createdAt": "2025-04-23T11:49:40.242Z",
+      "updatedAt": "2025-04-23T11:50:23.046Z"
+    },
+    {
+      "id": "0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95",
+      "status": "success",
+      "user": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+      "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+      "data": {
+        "slippageTolerance": "200",
+        "failReason": "N/A",
+        "fees": {
+          "gas": "398226819231",
+          "fixed": "0",
+          "price": "0"
+        },
+        "feesUsd": {
+          "gas": "1007",
+          "fixed": "0",
+          "price": "0"
+        },
+        "inTxs": [
+          {
+            "fee": "66167058330150",
+            "data": {
+              "to": "0xa5f565650890fba1824ee0f21ebbbf660a179934",
+              "data": "0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95",
+              "from": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "value": "2000000000000000"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-2000000000000000"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "2000000000000000"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              }
+            ],
+            "hash": "0x7333b2b1eeb13cc70a8072e961850557572dea92e75af23d04d4911cfa0712e9",
+            "block": 21887604,
+            "type": "onchain",
+            "chainId": 1,
+            "timestamp": 1740054911
+          }
+        ],
+        "currency": "eth",
+        "currencyObject": {},
+        "feeCurrency": "eth",
+        "feeCurrencyObject": {
+          "chainId": 1,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ether",
+          "decimals": 18,
+          "metadata": {
+            "logoURI": "https://assets.relay.link/icons/1/light.png",
+            "verified": true
+          }
+        },
+        "appFees": [],
+        "metadata": {
+          "sender": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "currencyIn": {
+            "currency": {
+              "chainId": 1,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": true
+              }
+            },
+            "amount": "2000000000000000",
+            "amountFormatted": "0.002",
+            "amountUsd": "5.481661",
+            "amountUsdCurrent": "5.040590",
+            "minimumAmount": "2000000000000000"
+          },
+          "currencyOut": {
+            "currency": {
+              "chainId": 8453,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": true
+              }
+            },
+            "amount": "1999583330942255",
+            "amountFormatted": "0.001999583330942255",
+            "amountUsd": "5.485567",
+            "amountUsdCurrent": "5.042043",
+            "minimumAmount": "1999583330942255"
+          },
+          "rate": "0.9997916654711275"
+        },
+        "price": "1999583330942255",
+        "usesExternalLiquidity": false,
+        "timeEstimate": 3,
+        "outTxs": [
+          {
+            "fee": "328738672589",
+            "data": {
+              "to": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "data": "0x71e360761a33c7834ff6c8b7b1428929b467847737e34e7069b24e862ecefa95",
+              "from": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+              "value": "1999583330942255"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-1999583330942255"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "1999583330942255"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              }
+            ],
+            "hash": "0x7faa65af7985d949ca998922aa6948b1cbe88dd21d20e1e75be9bdd0caca2c41",
+            "block": 26632785,
+            "type": "onchain",
+            "chainId": 8453,
+            "timestamp": 1740054917
+          }
+        ]
+      },
+      "referrer": "relay.link/swap",
+      "createdAt": "2025-02-20T12:35:15.329Z",
+      "updatedAt": "2025-02-20T12:35:31.018Z"
+    },
+    {
+      "id": "0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428",
+      "status": "success",
+      "user": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+      "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+      "data": {
+        "failReason": "N/A",
+        "fees": {
+          "gas": "214917873710400",
+          "fixed": "0",
+          "price": "470000000000"
+        },
+        "feesUsd": {
+          "gas": "543707",
+          "fixed": "0",
+          "price": "1189"
+        },
+        "inTxs": [
+          {
+            "fee": "858429645209",
+            "data": {
+              "to": "0xa5f565650890fba1824ee0f21ebbbf660a179934",
+              "data": "0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428",
+              "from": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "value": "2350000000000000"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-2350000000000000"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "2350000000000000"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              }
+            ],
+            "hash": "0x5f93e27483d7a6c32cac5f943ae325be84963c5a29af56081070bd7c3e3b309a",
+            "block": 24985990,
+            "type": "onchain",
+            "chainId": 8453,
+            "timestamp": 1736761327
+          }
+        ],
+        "currency": "eth",
+        "currencyObject": {},
+        "feeCurrency": "eth",
+        "feeCurrencyObject": {
+          "chainId": 8453,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ether",
+          "decimals": 18,
+          "metadata": {
+            "logoURI": "https://assets.relay.link/icons/1/light.png",
+            "verified": true
+          }
+        },
+        "appFees": [],
+        "metadata": {
+          "sender": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "currencyIn": {
+            "currency": {
+              "chainId": 8453,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "2350000000000000",
+            "amountFormatted": "0.00235",
+            "amountUsd": "7.433990",
+            "minimumAmount": "2350000000000000"
+          },
+          "currencyOut": {
+            "currency": {
+              "chainId": 1,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "2134612126289600",
+            "amountFormatted": "0.0021346121262896",
+            "amountUsd": "6.752632",
+            "minimumAmount": "2134612126289600"
+          },
+          "rate": "1"
+        },
+        "price": "2134612126289600",
+        "usesExternalLiquidity": false,
+        "timeEstimate": 8,
+        "outTxs": [
+          {
+            "fee": "169176080447064",
+            "data": {
+              "to": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "data": "0xfc9487a5c6e2dbcf91f5d0f26071e823913f5ae5a02561e00be422a6fee20428",
+              "from": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+              "value": "2134612126289600"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-2134612126289600"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "2134612126289600"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              }
+            ],
+            "hash": "0x37ccea683fab1e603df3a5128a08dde30a8cd67e8d9382c1c807515a214e3975",
+            "block": 21614738,
+            "type": "onchain",
+            "chainId": 1,
+            "timestamp": 1736761343
+          }
+        ]
+      },
+      "referrer": "relay.link/swap",
+      "createdAt": "2025-01-13T09:42:11.648Z",
+      "updatedAt": "2025-01-13T09:42:28.650Z"
+    },
+    {
+      "id": "0xc78842ec8e6fac5ec86f04ae630326f28ccbf32169fa47794ea3454f0006b12d",
+      "status": "success",
+      "user": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+      "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+      "data": {
+        "failReason": "N/A",
+        "fees": {
+          "gas": "4344105305277",
+          "fixed": "0",
+          "price": "22200000000"
+        },
+        "feesUsd": {
+          "gas": "10989",
+          "fixed": "0",
+          "price": "56"
+        },
+        "inTxs": [
+          {
+            "fee": "1176536158000",
+            "data": {
+              "to": "0xa5f565650890fba1824ee0f21ebbbf660a179934",
+              "data": "0x03dd62e5",
+              "from": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "value": "115366305305277"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-115366305305277"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "115366305305277"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              }
+            ],
+            "hash": "0x372070fc26eb6a9268a957d2515130bb273015f7ae838381067a25a749cfb918",
+            "block": 269336732,
+            "type": "onchain",
+            "chainId": 42161,
+            "timestamp": 1730319504
+          }
+        ],
+        "currency": "eth",
+        "currencyObject": {},
+        "feeCurrency": "eth",
+        "feeCurrencyObject": {
+          "chainId": 42161,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ether",
+          "decimals": 18,
+          "metadata": {
+            "logoURI": "https://assets.relay.link/icons/1/light.png",
+            "verified": true
+          }
+        },
+        "appFees": [],
+        "metadata": {
+          "sender": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "currencyIn": {
+            "currency": {
+              "chainId": 42161,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "115366305305277",
+            "amountFormatted": "0.000115366305305277",
+            "amountUsd": "0.305776",
+            "minimumAmount": "115366305305277"
+          },
+          "currencyOut": {
+            "currency": {
+              "chainId": 7777777,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "111000000000000",
+            "amountFormatted": "0.000111",
+            "amountUsd": "0.294203",
+            "minimumAmount": "111000000000000"
+          },
+          "rate": "1"
+        },
+        "price": "111000000000000",
+        "usesExternalLiquidity": false,
+        "timeEstimate": 3.5,
+        "outTxs": [
+          {
+            "fee": "3609254427882",
+            "data": {
+              "to": "0xb90ed4c123843cbfd66b11411ee7694ef37e6e72",
+              "data": "0x66e0daa0001e80001ec0001d0240001e01001e01000b777777722d078c97c6ad07d9f36801e653e356ae001e01001e20001d0104a836f32f000b3d423300800fecc8bd801ee0f80d3ec4f9f28f91d6001e01000b720ab9252fd99bd483c14f2e732618ed864abffe001e05000bf64df5c70080e4eb5986c0dd5d5b3bc9e455b560cd001ec0001e044c464721005601001964f43391f0000003dd62e5",
+              "from": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+              "value": "111000000000000"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-111000000000000"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "99900000000000"
+                },
+                "address": "0x7777777f279eba3d3ad8f4e708545291a6fdba8b"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "11100000000000"
+                },
+                "address": "0x6eae3f4cfee04887ec5d9d82ba92d64c3946bef4"
+              }
+            ],
+            "hash": "0xd28310692604e75fef97f4bdd084084d2a39de39802ff0c0362644fa7574c896",
+            "block": 21812834,
+            "type": "onchain",
+            "chainId": 7777777,
+            "timestamp": 1730319507
+          }
+        ]
+      },
+      "referrer": "https://zora.co",
+      "createdAt": "2024-10-30T20:18:24.468Z",
+      "updatedAt": "2024-10-30T20:18:29.585Z"
+    },
+    {
+      "id": "0x00c915c4dc953d54af6862072cf6671b2507e82c07bd7ee223dc71b9a79f6373",
+      "status": "success",
+      "user": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+      "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+      "data": {
+        "failReason": "N/A",
+        "fees": {
+          "gas": "4874646390786",
+          "fixed": "0",
+          "price": "44400000000"
+        },
+        "feesUsd": {
+          "gas": "12332",
+          "fixed": "0",
+          "price": "112"
+        },
+        "inTxs": [
+          {
+            "fee": "1048100000000",
+            "data": {
+              "to": "0xa5f565650890fba1824ee0f21ebbbf660a179934",
+              "data": "0x03dc57f2",
+              "from": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6",
+              "value": "226919046390786"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-226919046390786"
+                },
+                "address": "0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "226919046390786"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              }
+            ],
+            "hash": "0xa7a4c61645596d0a05573d8c2a5e7f765ffb81d74f4c3bfcfd6f24a7a8c076c8",
+            "block": 269297474,
+            "type": "onchain",
+            "chainId": 42161,
+            "timestamp": 1730309631
+          }
+        ],
+        "currency": "eth",
+        "currencyObject": {},
+        "feeCurrency": "eth",
+        "feeCurrencyObject": {
+          "chainId": 42161,
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "ETH",
+          "name": "Ether",
+          "decimals": 18,
+          "metadata": {
+            "logoURI": "https://assets.relay.link/icons/1/light.png",
+            "verified": true
+          }
+        },
+        "appFees": [],
+        "metadata": {
+          "sender": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "recipient": "0x3d4233fF0FECc8BD801ee0f80D3EC4f9F28F91D6",
+          "currencyIn": {
+            "currency": {
+              "chainId": 42161,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "226919046390786",
+            "amountFormatted": "0.000226919046390786",
+            "amountUsd": "0.607993",
+            "minimumAmount": "226919046390786"
+          },
+          "currencyOut": {
+            "currency": {
+              "chainId": 7777777,
+              "address": "0x0000000000000000000000000000000000000000",
+              "symbol": "ETH",
+              "name": "Ether",
+              "decimals": 18,
+              "metadata": {
+                "logoURI": "https://assets.relay.link/icons/1/light.png",
+                "verified": false,
+                "isNative": false
+              }
+            },
+            "amount": "222000000000000",
+            "amountFormatted": "0.000222",
+            "amountUsd": "0.594813",
+            "minimumAmount": "222000000000000"
+          },
+          "rate": "1"
+        },
+        "price": "222000000000000",
+        "usesExternalLiquidity": false,
+        "timeEstimate": 4,
+        "outTxs": [
+          {
+            "fee": "4043943653372",
+            "data": {
+              "to": "0xb90ed4c123843cbfd66b11411ee7694ef37e6e72",
+              "data": "0x66e0daa0001e80001ec0001d0240001e01001e01000b777777722d078c97c6ad07d9f36801e653e356ae001e01001e20001d0104a836f32f000b3d423300800fecc8bd801ee0f80d3ec4f9f28f91d6001e02000b97ca30d12b979555e34a0575dd5a0000843f684650001e01000bcd0d83d9e840f8e27d5c2e365fd36500801c05b248001ec0001e07627573746564210053010019c9e86723e0000003dc57f2",
+              "from": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+              "value": "222000000000000"
+            },
+            "stateChanges": [
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "-222000000000000"
+                },
+                "address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "199800000000000"
+                },
+                "address": "0x7777777f279eba3d3ad8f4e708545291a6fdba8b"
+              },
+              {
+                "change": {
+                  "data": {
+                    "tokenKind": "ft",
+                    "tokenAddress": "0x0000000000000000000000000000000000000000"
+                  },
+                  "kind": "token",
+                  "balanceDiff": "22200000000000"
+                },
+                "address": "0x0a9ae2567493a62b4f54e3d1b34110405c3afdea"
+              }
+            ],
+            "hash": "0x3ec97fd35a237a9d06cee244b74a43e68a7ef367fc7f7f782d9e9609eb256081",
+            "block": 21807897,
+            "type": "onchain",
+            "chainId": 7777777,
+            "timestamp": 1730309633
+          }
+        ]
+      },
+      "referrer": "https://zora.co",
+      "createdAt": "2024-10-30T17:33:52.022Z",
+      "updatedAt": "2024-10-30T17:33:57.197Z"
+    }
+  ]
+}

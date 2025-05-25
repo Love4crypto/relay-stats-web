@@ -1287,3 +1287,317 @@ header h2 {
 .refresh-button:active {
   transform: translateY(0);
 }
+
+/* Add these styles to your existing styles.css */
+
+/* Leaderboard Section */
+.leaderboard-section {
+    margin-top: 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.section-header p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Leaderboard Tabs */
+.leaderboard-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Leaderboard Table */
+.leaderboard-table {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.leaderboard-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-table th {
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.leaderboard-table tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.rank-1 { background: #ffd700; color: #000; }
+.rank-2 { background: #c0c0c0; color: #000; }
+.rank-3 { background: #cd7f32; color: #fff; }
+.rank-other { background: rgba(255, 255, 255, 0.2); }
+
+.address-short {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* User Rank Card */
+.user-rank-card {
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.user-rank-card h3 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.rank-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.rank-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+.rank-label {
+    font-weight: 500;
+}
+
+.rank-value {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.opt-in-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+    color: white;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.opt-in-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+}
+
+.opt-in-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: #333;
+}
+
+.modal-body ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.modal-body li {
+    margin-bottom: 0.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.btn-primary, .btn-secondary {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .leaderboard-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .tab-btn {
+        min-width: auto;
+    }
+    
+    .leaderboard-table {
+        font-size: 0.9rem;
+    }
+    
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .rank-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}
+
+/* Hide/Show utilities */
+.hidden {
+    display: none !important;
+}

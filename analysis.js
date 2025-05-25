@@ -3,6 +3,14 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+// Import leaderboard module (optional - graceful fallback if not available)
+let leaderboard;
+try {
+  leaderboard = require('./leaderboard');
+} catch (err) {
+  console.log('Leaderboard module not available - leaderboard features disabled');
+}
+
 // --- Configuration
 const API_BASE_URL = 'https://api.relay.link';
 const CACHE_DIR = path.join(__dirname, 'cache');
@@ -114,7 +122,7 @@ async function fetchTokenPrice(tokenAddress, chainId) {
   }
 }
 
-// Fetch transactions with retry logic - UPDATED WITH FORCE REFRESH AND DEBUG
+// Fetch transactions with retry logic - UPDATED WITH FORCE REFRESH SUPPORT
 async function fetchTransactions(address, forceRefresh = false) {
   const addressType = getAddressType(address);
   console.log(`🔍 Address type detected: ${addressType}`);
@@ -156,7 +164,7 @@ async function fetchTransactions(address, forceRefresh = false) {
   for (const queryType of queryTypes) {
     console.log(`\n🔎 Attempting to fetch transactions with ${queryType}=${address}`);
     
-    const params = { limit: 50 }; // ← INCREASED FROM 20 TO 50
+    const params = { limit: 50 }; // Increased from 20 to 50 for better coverage
     params[queryType] = address;
     
     let continuation = null;
@@ -176,7 +184,7 @@ async function fetchTransactions(address, forceRefresh = false) {
         try {
           const response = await axios.get(`${API_BASE_URL}/requests/v2`, { 
             params,
-            timeout: 15000 // ← INCREASED TIMEOUT
+            timeout: 15000 // Increased timeout for better reliability
           });
           
           console.log(`📊 API Response status: ${response.status}`);
@@ -185,7 +193,7 @@ async function fetchTransactions(address, forceRefresh = false) {
             const pageTransactions = response.data.requests;
             console.log(`📦 Received ${pageTransactions.length} transactions on this page`);
             
-            // LOG FIRST FEW TRANSACTIONS FROM THIS PAGE
+            // Log first few transactions from this page for debugging
             if (pageTransactions.length > 0) {
               console.log(`📅 Page ${pageCount} transactions (showing first 3):`);
               pageTransactions.slice(0, 3).forEach((tx, i) => {
@@ -223,9 +231,9 @@ async function fetchTransactions(address, forceRefresh = false) {
           await sleep(backoff);
         }
         
-        await sleep(1000);
+        await sleep(1000); // Rate limiting delay
         
-      } while (continuation && pageCount < 20); // ← INCREASED FROM 10 TO 20 PAGES
+      } while (continuation && pageCount < 20); // Increased from 10 to 20 pages for better coverage
       
     } catch (error) {
       console.warn(`💥 Error in ${queryType} transaction cycle:`, error.message);
@@ -235,7 +243,7 @@ async function fetchTransactions(address, forceRefresh = false) {
   console.log(`\n📊 FINAL RESULTS:`);
   console.log(`   Total unique transactions found: ${transactions.length}`);
   
-  // COMPREHENSIVE DEBUG: Show latest transactions
+  // Show latest transactions for debugging
   if (transactions.length > 0) {
     console.log(`\n📅 Latest 10 transactions by date:`);
     transactions
@@ -251,8 +259,12 @@ async function fetchTransactions(address, forceRefresh = false) {
       transactions
     };
     
-    fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
-    console.log(`💾 Cached ${transactions.length} transactions to ${cacheFile}`);
+    try {
+      fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
+      console.log(`💾 Cached ${transactions.length} transactions to ${cacheFile}`);
+    } catch (cacheError) {
+      console.warn(`⚠️ Failed to cache data: ${cacheError.message}`);
+    }
   } else {
     console.log(`❌ No transactions found to cache`);
   }
@@ -269,7 +281,7 @@ function extractRawTotals(transactions) {
     
     const md = req.data.metadata;
     
-    // Aggregate raw totals
+    // Aggregate raw totals for tokens bridged IN
     if (md.currencyIn) {
       const sym = md.currencyIn.currency.symbol;
       const addr = md.currencyIn.currency.address || '0x0000000000000000000000000000000000000000';
@@ -286,6 +298,7 @@ function extractRawTotals(transactions) {
       rawTotals[sym].in += parseFloat(md.currencyIn.amountFormatted || 0);
     }
     
+    // Aggregate raw totals for tokens bridged OUT
     if (md.currencyOut) {
       const sym = md.currencyOut.currency.symbol;
       const addr = md.currencyOut.currency.address || '0x0000000000000000000000000000000000000000';
@@ -306,125 +319,205 @@ function extractRawTotals(transactions) {
   return rawTotals;
 }
 
-// Main analysis function - UPDATED WITH FORCE REFRESH SUPPORT AND DEBUG
+// Main analysis function - UPDATED WITH FORCE REFRESH AND LEADERBOARD SUPPORT
 async function analyzeAddress(address, options = {}) {
-  const { forceRefresh = false } = options;
+  const { forceRefresh = false, updateLeaderboard = false } = options;
   
   console.log(`\n🚀 STARTING ANALYSIS`);
   console.log(`   Address: ${address}`);
   console.log(`   Force refresh: ${forceRefresh}`);
+  console.log(`   Update leaderboard: ${updateLeaderboard}`);
   console.log(`   Timestamp: ${new Date().toISOString()}`);
   
-  // Fetch transactions with force refresh option
-  const transactions = await fetchTransactions(address, forceRefresh);
-  
-  console.log(`\n📈 ANALYSIS RESULTS:`);
-  console.log(`   Transactions found: ${transactions.length}`);
-  
-  if (transactions.length === 0) {
-    console.log(`❌ No transactions found - returning error response`);
+  try {
+    // Fetch transactions with force refresh option
+    const transactions = await fetchTransactions(address, forceRefresh);
+    
+    console.log(`\n📈 ANALYSIS RESULTS:`);
+    console.log(`   Transactions found: ${transactions.length}`);
+    
+    if (transactions.length === 0) {
+      console.log(`❌ No transactions found - returning error response`);
+      return {
+        success: false,
+        error: 'No transactions found',
+        troubleshooting: [
+          'Verify the address is correct',
+          'Check if this address has used Relay bridge',
+          'Try again later'
+        ]
+      };
+    }
+    
+    // Extract raw totals for volume reporting
+    const rawTotals = extractRawTotals(transactions);
+    console.log(`💰 Tokens found: ${Object.keys(rawTotals).length}`);
+    
+    // Prepare summary data
+    const uniqueDates = new Set();
+    const chainsUsed = new Set();
+    const tokens = new Set();
+    
+    for (const tx of transactions) {
+      // Track unique transaction dates
+      if (tx.createdAt) {
+        uniqueDates.add(tx.createdAt.split('T')[0]);
+      }
+      
+      // Track chains and tokens from metadata
+      if (tx.data && tx.data.metadata) {
+        const md = tx.data.metadata;
+        if (md.currencyIn) {
+          chainsUsed.add(md.currencyIn.currency.chainId);
+          tokens.add(md.currencyIn.currency.symbol);
+        }
+        if (md.currencyOut) {
+          chainsUsed.add(md.currencyOut.currency.chainId);
+          tokens.add(md.currencyOut.currency.symbol);
+        }
+      }
+      
+      // Track chains from transaction data
+      if (tx.data) {
+        if (tx.data.inTxs) {
+          for (const inTx of tx.data.inTxs) {
+            if (inTx.chainId) chainsUsed.add(inTx.chainId);
+          }
+        }
+        if (tx.data.outTxs) {
+          for (const outTx of tx.data.outTxs) {
+            if (outTx.chainId) chainsUsed.add(outTx.chainId);
+          }
+        }
+      }
+    }
+    
+    console.log(`📊 Summary calculated:`);
+    console.log(`   Unique dates: ${uniqueDates.size}`);
+    console.log(`   Chains used: ${chainsUsed.size}`);
+    console.log(`   Tokens: ${tokens.size}`);
+    
+    // Fetch current token prices
+    console.log(`\n💲 Fetching token prices...`);
+    for (const tokenSymbol in rawTotals) {
+      const token = rawTotals[tokenSymbol];
+      if (token.address && token.chainId) {
+        try {
+          token.price = await fetchTokenPrice(token.address, token.chainId);
+          await sleep(300); // Rate limiting for price API
+        } catch (priceError) {
+          console.warn(`Failed to fetch price for ${tokenSymbol}:`, priceError.message);
+          token.price = null;
+        }
+      }
+    }
+    
+    // Calculate total USD value and format token data
+    let totalUSDValue = 0;
+    const formattedTokens = [];
+    
+    for (const [sym, token] of Object.entries(rawTotals)) {
+      const usdValue = token.price ? token.in * token.price : null;
+      if (usdValue && !isNaN(usdValue)) {
+        totalUSDValue += usdValue;
+      }
+      
+      formattedTokens.push({
+        symbol: sym,
+        amount: token.in,
+        price: token.price,
+        usdValue: usdValue
+      });
+    }
+    
+    // Sort tokens by USD value (highest first)
+    formattedTokens.sort((a, b) => (b.usdValue || 0) - (a.usdValue || 0));
+    
+    const result = {
+      success: true,
+      summary: {
+        firstDate: Array.from(uniqueDates).sort()[0] || 'N/A',
+        transactionCount: transactions.length,
+        uniqueChains: chainsUsed.size,
+        uniqueTokens: tokens.size,
+        totalUSDValue: totalUSDValue
+      },
+      tokens: formattedTokens
+    };
+    
+    console.log(`\n✅ ANALYSIS COMPLETE:`);
+    console.log(`   Success: ${result.success}`);
+    console.log(`   Transaction count: ${result.summary.transactionCount}`);
+    console.log(`   Total USD value: ${formatUSD(result.summary.totalUSDValue)}`);
+    console.log(`   First date: ${result.summary.firstDate}`);
+    console.log(`   Unique chains: ${result.summary.uniqueChains}`);
+    console.log(`   Unique tokens: ${result.summary.uniqueTokens}`);
+    
+    // Update leaderboard if requested and module is available
+    if (updateLeaderboard && leaderboard && result.success) {
+      try {
+        console.log(`📊 Updating leaderboard stats for ${address}`);
+        await leaderboard.updateUserStats(address, false); // Don't auto opt-in, let user choose
+        console.log(`✅ Leaderboard stats updated successfully`);
+      } catch (leaderboardError) {
+        console.warn('⚠️ Failed to update leaderboard stats:', leaderboardError.message);
+        // Don't fail the analysis if leaderboard update fails
+      }
+    }
+    
+    return result;
+    
+  } catch (error) {
+    console.error(`💥 Analysis failed for ${address}:`, error.message);
+    console.error(`Stack trace:`, error.stack);
+    
     return {
       success: false,
-      error: 'No transactions found',
+      error: 'Analysis failed due to an unexpected error',
       troubleshooting: [
-        'Verify the address is correct',
-        'Check if this address has used Relay bridge',
-        'Try again later'
+        'Check your network connection',
+        'Verify the address format is correct',
+        'Try again in a few minutes',
+        'Contact support if the issue persists'
       ]
     };
   }
-  
-  // Extract raw totals for simple volume reporting
-  const rawTotals = extractRawTotals(transactions);
-  console.log(`💰 Tokens found: ${Object.keys(rawTotals).length}`);
-  
-  // Prepare summary data
-  const uniqueDates = new Set();
-  const chainsUsed = new Set();
-  const tokens = new Set();
-  
-  for (const tx of transactions) {
-    if (tx.createdAt) {
-      uniqueDates.add(tx.createdAt.split('T')[0]);
-    }
-    
-    if (tx.data && tx.data.metadata) {
-      const md = tx.data.metadata;
-      if (md.currencyIn) {
-        chainsUsed.add(md.currencyIn.currency.chainId);
-        tokens.add(md.currencyIn.currency.symbol);
-      }
-      if (md.currencyOut) {
-        chainsUsed.add(md.currencyOut.currency.chainId);
-        tokens.add(md.currencyOut.currency.symbol);
-      }
-    }
-    
-    // Track chains from transactions
-    if (tx.data) {
-      if (tx.data.inTxs) {
-        for (const inTx of tx.data.inTxs) {
-          if (inTx.chainId) chainsUsed.add(inTx.chainId);
-        }
-      }
-      if (tx.data.outTxs) {
-        for (const outTx of tx.data.outTxs) {
-          if (outTx.chainId) chainsUsed.add(outTx.chainId);
-        }
-      }
-    }
-  }
-  
-  console.log(`📊 Summary calculated:`);
-  console.log(`   Unique dates: ${uniqueDates.size}`);
-  console.log(`   Chains used: ${chainsUsed.size}`);
-  console.log(`   Tokens: ${tokens.size}`);
-  
-  // Fetch prices
-  console.log(`\n💲 Fetching token prices...`);
-  for (const tokenSymbol in rawTotals) {
-    const token = rawTotals[tokenSymbol];
-    if (token.address && token.chainId) {
-      token.price = await fetchTokenPrice(token.address, token.chainId);
-      await sleep(300);
-    }
-  }
-  
-  // Calculate total USD value
-  let totalUSDValue = 0;
-  const formattedTokens = [];
-  
-  for (const [sym, token] of Object.entries(rawTotals)) {
-    const usdValue = token.price ? token.in * token.price : null;
-    if (usdValue) totalUSDValue += usdValue;
-    
-    formattedTokens.push({
-      symbol: sym,
-      amount: token.in,
-      price: token.price,
-      usdValue: usdValue
-    });
-  }
-  
-  const result = {
-    success: true,
-    summary: {
-      firstDate: Array.from(uniqueDates).sort()[0] || 'N/A',
-      transactionCount: transactions.length,
-      uniqueChains: chainsUsed.size,
-      uniqueTokens: tokens.size,
-      totalUSDValue: totalUSDValue
-    },
-    tokens: formattedTokens
-  };
-  
-  console.log(`\n✅ ANALYSIS COMPLETE:`);
-  console.log(`   Success: ${result.success}`);
-  console.log(`   Transaction count: ${result.summary.transactionCount}`);
-  console.log(`   Total USD value: ${formatUSD(result.summary.totalUSDValue)}`);
-  console.log(`   First date: ${result.summary.firstDate}`);
-  
-  return result;
 }
 
-module.exports = { analyzeAddress };
+// Helper function to get basic address info without full analysis
+function getAddressInfo(address) {
+  const addressType = getAddressType(address);
+  const safeKey = safeCacheKey(address);
+  const cacheFile = path.join(CACHE_DIR, `${safeKey}.json`);
+  
+  // Check if we have cached data
+  let cachedData = null;
+  if (fs.existsSync(cacheFile)) {
+    try {
+      const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      const cacheAge = Date.now() - cache.timestamp;
+      cachedData = {
+        transactionCount: cache.transactions?.length || 0,
+        cacheAge: Math.floor(cacheAge / (1000 * 60)), // age in minutes
+        lastUpdated: new Date(cache.timestamp).toISOString()
+      };
+    } catch (err) {
+      console.warn('Error reading cache for address info:', err.message);
+    }
+  }
+  
+  return {
+    address,
+    addressType,
+    cachedData
+  };
+}
+
+// Export functions
+module.exports = { 
+  analyzeAddress,
+  getAddressInfo,
+  formatUSD,
+  formatNumber,
+  getAddressType
+};
