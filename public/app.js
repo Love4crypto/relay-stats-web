@@ -79,6 +79,218 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentLeaderboardPage = 1;
   let totalLeaderboardPages = 1;
   let leaderboardSearch = '';
+  
+  // Add this near the top of your app.js file (around line 50):
+
+// ========== IMPROVED STATE MANAGEMENT ==========
+
+let currentUserStats = null;
+let leaderboardCache = new Map();
+let lastOptInAction = null;
+
+function clearLeaderboardCache() {
+  leaderboardCache.clear();
+  console.log('🧹 Leaderboard cache cleared');
+}
+
+function updateCurrentUserStats(userStats) {
+  currentUserStats = userStats;
+  console.log('📊 Current user stats updated:', userStats);
+}
+
+// ========== IMPROVED LEADERBOARD FUNCTIONS ==========
+
+// Replace your loadLeaderboardWithPagination function with this improved version:
+async function loadLeaderboardWithPagination(type = 'transactions', page = 1, search = '') {
+  try {
+    showLoadingSpinner();
+    
+    console.log(`📊 Loading ${type} leaderboard, page ${page}, search: ${search}`);
+    
+    // Clear cache if user just performed an opt-in/out action
+    if (lastOptInAction && Date.now() - lastOptInAction < 5000) {
+      clearLeaderboardCache();
+      lastOptInAction = null;
+    }
+    
+    const cacheKey = `${type}_${page}_${search}`;
+    
+    // Check cache first (but only if no recent opt-in action)
+    if (leaderboardCache.has(cacheKey) && !lastOptInAction) {
+      const cached = leaderboardCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < 30000) { // 30 second cache
+        console.log('Using cached leaderboard data');
+        displayLeaderboard(cached.data.leaderboard, type);
+        displayPaginationControls(cached.data.pagination, type);
+        hideLoadingSpinner();
+        return;
+      }
+    }
+    
+    const params = new URLSearchParams({
+      page: page,
+      limit: 50,
+      ...(search && { search: search })
+    });
+    
+    const response = await fetch(`/api/leaderboard/${type}?${params}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      currentLeaderboardPage = data.pagination.currentPage;
+      totalLeaderboardPages = data.pagination.totalPages;
+      leaderboardSearch = search;
+      
+      // Cache the result
+      leaderboardCache.set(cacheKey, {
+        data: data,
+        timestamp: Date.now()
+      });
+      
+      displayLeaderboard(data.leaderboard, type);
+      displayPaginationControls(data.pagination, type);
+      
+      // Update URL without page reload
+      const url = new URL(window.location);
+      url.searchParams.set('page', page);
+      if (search) {
+        url.searchParams.set('search', search);
+      } else {
+        url.searchParams.delete('search');
+      }
+      window.history.replaceState({}, '', url);
+      
+    } else {
+      showMessage('Failed to load leaderboard: ' + data.error, 'error');
+    }
+  } catch (error) {
+    showMessage('Error loading leaderboard: ' + error.message, 'error');
+  } finally {
+    hideLoadingSpinner();
+  }
+}
+
+// Replace your handleOptIn function with this improved version:
+async function handleOptIn() {
+  try {
+    const currentAddress = getCurrentWalletAddress();
+    if (!currentAddress) {
+      showMessage('Please connect a wallet first', 'error');
+      return;
+    }
+
+    console.log('🔄 Starting opt-in process...');
+    showMessage('Preparing signature request...', 'info');
+
+    const messageData = await getSignatureMessage(currentAddress, 'join');
+    showMessage('Please sign the message in your wallet...', 'info');
+    
+    const signature = await signMessageWithWallet(messageData, currentAddress);
+    showMessage('Submitting to leaderboard...', 'info');
+    
+    const response = await fetch('/api/leaderboard/update-opt-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: currentAddress,
+        optIn: true,
+        signature: signature,
+        message: messageData.message,
+        timestamp: messageData.timestamp,
+        nonce: messageData.nonce
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage('Successfully joined the leaderboard!', 'success');
+      
+      // FIXED: Mark opt-in action timestamp and clear cache
+      lastOptInAction = Date.now();
+      clearLeaderboardCache();
+      
+      // Update user stats
+      updateCurrentUserStats(data.userStats);
+      
+      // Reload user rank and leaderboard
+      await loadUserRank(currentAddress);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      loadLeaderboardWithPagination(currentLeaderboardType, currentLeaderboardPage, leaderboardSearch);
+      
+    } else {
+      showMessage('Failed to join leaderboard: ' + data.error, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Opt-in error:', error);
+    if (error.message.includes('User rejected')) {
+      showMessage('Signature was cancelled by user', 'info');
+    } else {
+      showMessage('Failed to join leaderboard: ' + error.message, 'error');
+    }
+  }
+}
+
+// Replace your handleOptOut function with this improved version:
+async function handleOptOut(address) {
+  try {
+    if (!confirm('Are you sure you want to leave the leaderboard? You can rejoin anytime.')) {
+      return;
+    }
+
+    console.log('🔄 Starting opt-out process...');
+    showMessage('Preparing signature request...', 'info');
+
+    const messageData = await getSignatureMessage(address, 'leave');
+    showMessage('Please sign the message in your wallet...', 'info');
+    
+    const signature = await signMessageWithWallet(messageData, address);
+    showMessage('Submitting to leaderboard...', 'info');
+    
+    const response = await fetch('/api/leaderboard/update-opt-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: address,
+        optIn: false,
+        signature: signature,
+        message: messageData.message,
+        timestamp: messageData.timestamp,
+        nonce: messageData.nonce
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      showMessage('Successfully left the leaderboard', 'info');
+      
+      // FIXED: Mark opt-out action timestamp and clear cache
+      lastOptInAction = Date.now();
+      clearLeaderboardCache();
+      
+      // Update user stats
+      updateCurrentUserStats(data.userStats);
+      
+      // Reload user rank and leaderboard
+      await loadUserRank(address);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      loadLeaderboardWithPagination(currentLeaderboardType, currentLeaderboardPage, leaderboardSearch);
+      
+    } else {
+      showMessage('Failed to leave leaderboard: ' + data.error, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Opt-out error:', error);
+    if (error.message.includes('User rejected')) {
+      showMessage('Signature was cancelled by user', 'info');
+    } else {
+      showMessage('Failed to leave leaderboard: ' + error.message, 'error');
+    }
+  }
+}
 
   // ========== INITIALIZATION ==========
   
