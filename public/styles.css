@@ -1266,7 +1266,7 @@ header h2 {
   padding: 4px;
 }
 .refresh-button {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: var(--relay-purple);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -1280,7 +1280,7 @@ header h2 {
 }
 
 .refresh-button:hover {
-  background: linear-gradient(135deg, #059669, #047857);
+  background: #EF41FF;
   transform: translateY(-2px);
 }
 
