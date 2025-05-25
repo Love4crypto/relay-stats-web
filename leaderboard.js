@@ -33,20 +33,20 @@ function initializeDatabase() {
       });
       
       // Create user_stats table
-      const createTableSQL = `
-        CREATE TABLE IF NOT EXISTS user_stats (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          address TEXT UNIQUE NOT NULL,
-          transaction_count INTEGER DEFAULT 0,
-          total_usd_value REAL DEFAULT 0,
-          unique_chains INTEGER DEFAULT 0,
-          unique_tokens INTEGER DEFAULT 0,
-          first_transaction_date TEXT,
-          last_updated TEXT,
-          opt_in_leaderboard INTEGER DEFAULT 0,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `;
+    const createTableSQL = `
+  CREATE TABLE IF NOT EXISTS user_stats (
+    address TEXT PRIMARY KEY NOT NULL,
+    transaction_count INTEGER DEFAULT 0,
+    total_usd_value REAL DEFAULT 0,
+    unique_chains INTEGER DEFAULT 0,
+    unique_tokens INTEGER DEFAULT 0,
+    first_transaction_date TEXT,
+    last_updated INTEGER,
+    last_activity INTEGER,
+    opt_in_leaderboard INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (strftime('%s', 'now'))
+  )
+`;
       
       db.run(createTableSQL, (err) => {
         if (err) {
@@ -57,14 +57,15 @@ function initializeDatabase() {
         console.log('✅ user_stats table ready');
         
         // Create indexes for better performance
-        const createIndexes = [
-          'CREATE INDEX IF NOT EXISTS idx_transaction_count ON user_stats(transaction_count DESC)',
-          'CREATE INDEX IF NOT EXISTS idx_total_usd_value ON user_stats(total_usd_value DESC)',
-          'CREATE INDEX IF NOT EXISTS idx_unique_chains ON user_stats(unique_chains DESC)',
-          'CREATE INDEX IF NOT EXISTS idx_unique_tokens ON user_stats(unique_tokens DESC)',
-          'CREATE INDEX IF NOT EXISTS idx_opt_in ON user_stats(opt_in_leaderboard)',
-          'CREATE INDEX IF NOT EXISTS idx_address ON user_stats(address)'
-        ];
+      const createIndexes = [
+  'CREATE INDEX IF NOT EXISTS idx_transaction_count ON user_stats(transaction_count DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_total_usd_value ON user_stats(total_usd_value DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_unique_chains ON user_stats(unique_chains DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_unique_tokens ON user_stats(unique_tokens DESC)',
+  'CREATE INDEX IF NOT EXISTS idx_opt_in ON user_stats(opt_in_leaderboard)',
+  'CREATE INDEX IF NOT EXISTS idx_last_updated ON user_stats(last_updated)',
+  'CREATE INDEX IF NOT EXISTS idx_last_activity ON user_stats(last_activity)'
+];
         
         Promise.all(createIndexes.map(sql => {
           return new Promise((resolveIndex, rejectIndex) => {
@@ -86,7 +87,8 @@ function initializeDatabase() {
   });
 }
 
-// FIXED: Update user stats with proper transaction handling
+// Replace the updateUserStats function (around line 90) with this:
+
 async function updateUserStats(address, autoOptIn = false) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -120,7 +122,8 @@ async function updateUserStats(address, autoOptIn = false) {
         unique_chains: result.summary.uniqueChains || 0,
         unique_tokens: result.summary.uniqueTokens || 0,
         first_transaction_date: result.summary.firstDate,
-        last_updated: new Date().toISOString(),
+        last_updated: Math.floor(Date.now() / 1000), // INTEGER timestamp
+        last_activity: Math.floor(Date.now() / 1000), // INTEGER timestamp
         opt_in_leaderboard: autoOptIn ? 1 : 0
       };
 
@@ -138,17 +141,18 @@ async function updateUserStats(address, autoOptIn = false) {
           // Preserve existing opt-in status if user exists
           const finalOptIn = existing ? existing.opt_in_leaderboard : stats.opt_in_leaderboard;
           
+          // FIXED: Use correct column names and INSERT OR REPLACE
           const sql = `
             INSERT OR REPLACE INTO user_stats (
               address, transaction_count, total_usd_value, unique_chains, 
-              unique_tokens, first_transaction_date, last_updated, opt_in_leaderboard
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              unique_tokens, first_transaction_date, last_updated, last_activity, opt_in_leaderboard
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
 
           db.run(sql, [
             stats.address, stats.transaction_count, stats.total_usd_value,
             stats.unique_chains, stats.unique_tokens, stats.first_transaction_date,
-            stats.last_updated, finalOptIn
+            stats.last_updated, stats.last_activity, finalOptIn
           ], function(err) {
             if (err) {
               db.run('ROLLBACK');
@@ -339,7 +343,8 @@ async function getUserRank(address) {
   });
 }
 
-// FIXED: Improved opt-in status update with proper locking
+// Replace the updateOptInStatus function (around line 300) with this:
+
 async function updateOptInStatus(address, optIn) {
   return new Promise((resolve, reject) => {
     let normalizedAddress;
@@ -375,13 +380,16 @@ async function updateOptInStatus(address, optIn) {
             });
           }
 
+          // FIXED: Use INTEGER timestamp for last_updated
           const sql = `
             UPDATE user_stats 
-            SET opt_in_leaderboard = ?, last_updated = ?
+            SET opt_in_leaderboard = ?, last_updated = ?, last_activity = ?
             WHERE address = ?
           `;
 
-          db.run(sql, [optIn ? 1 : 0, new Date().toISOString(), normalizedAddress], function(err) {
+          const timestamp = Math.floor(Date.now() / 1000);
+
+          db.run(sql, [optIn ? 1 : 0, timestamp, timestamp, normalizedAddress], function(err) {
             if (err) {
               db.run('ROLLBACK');
               console.error('Error updating opt-in status:', err);
