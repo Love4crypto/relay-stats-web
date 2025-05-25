@@ -6,8 +6,8 @@ require('dotenv').config();
 // --- Configuration
 const API_BASE_URL = 'https://api.relay.link';
 const CACHE_DIR = path.join(__dirname, 'cache');
-const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24h
-const PRICE_CACHE_DURATION_MS = 1 * 60 * 60 * 1000; // 1h for prices
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes for wallet data
+const PRICE_CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes for prices (prices change less frequently)
 
 // Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
