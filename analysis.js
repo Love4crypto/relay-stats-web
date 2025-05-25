@@ -7,7 +7,7 @@ require('dotenv').config();
 const API_BASE_URL = 'https://api.relay.link';
 const CACHE_DIR = path.join(__dirname, 'cache');
 const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes for wallet data
-const PRICE_CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes for prices (prices change less frequently)
+const PRICE_CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes for prices
 
 // Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
@@ -114,41 +114,49 @@ async function fetchTokenPrice(tokenAddress, chainId) {
   }
 }
 
-// Fetch transactions with retry logic - UPDATED WITH FORCE REFRESH SUPPORT
+// Fetch transactions with retry logic - UPDATED WITH FORCE REFRESH AND DEBUG
 async function fetchTransactions(address, forceRefresh = false) {
   const addressType = getAddressType(address);
-  console.log(`Address type detected: ${addressType}`);
+  console.log(`🔍 Address type detected: ${addressType}`);
   
   // Create a safe cache key that preserves case for Solana addresses
   const safeKey = safeCacheKey(address);
   const cacheFile = path.join(CACHE_DIR, `${safeKey}.json`);
   
+  console.log(`📁 Cache file: ${cacheFile}`);
+  console.log(`🔄 Force refresh: ${forceRefresh}`);
+  
   // Check cache first (unless force refresh is requested)
   if (!forceRefresh && fs.existsSync(cacheFile)) {
     try {
       const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Date.now() - cache.timestamp < CACHE_DURATION_MS) {
-        console.log(`Using cached data with ${cache.transactions.length} transactions`);
+      const cacheAge = Date.now() - cache.timestamp;
+      const cacheAgeMinutes = Math.floor(cacheAge / (1000 * 60));
+      
+      console.log(`📋 Cache found - Age: ${cacheAgeMinutes} minutes (max: ${CACHE_DURATION_MS / (1000 * 60)} minutes)`);
+      
+      if (cacheAge < CACHE_DURATION_MS) {
+        console.log(`✅ Using cached data with ${cache.transactions.length} transactions`);
         return cache.transactions;
+      } else {
+        console.log(`⏰ Cache expired, fetching fresh data`);
       }
     } catch (err) {
-      console.warn('Cache read error, will fetch fresh data');
+      console.warn('❌ Cache read error, will fetch fresh data:', err.message);
     }
   }
   
   if (forceRefresh) {
-    console.log('Force refresh requested - fetching fresh data from API');
+    console.log('🚀 Force refresh requested - fetching fresh data from API');
   }
   
-  // Rest of the function remains the same...
   const transactions = [];
-  
   const queryTypes = ['user'];
   
   for (const queryType of queryTypes) {
-    console.log(`Attempting to fetch transactions with ${queryType}=${address}`);
+    console.log(`\n🔎 Attempting to fetch transactions with ${queryType}=${address}`);
     
-    const params = { limit: 20 };
+    const params = { limit: 50 }; // ← INCREASED FROM 20 TO 50
     params[queryType] = address;
     
     let continuation = null;
@@ -163,59 +171,111 @@ async function fetchTransactions(address, forceRefresh = false) {
         }
         
         pageCount++;
-        console.log(`Fetching ${queryType} page ${pageCount}...`);
+        console.log(`📄 Fetching ${queryType} page ${pageCount}...`);
         
         try {
           const response = await axios.get(`${API_BASE_URL}/requests/v2`, { 
             params,
-            timeout: 10000
+            timeout: 15000 // ← INCREASED TIMEOUT
           });
           
+          console.log(`📊 API Response status: ${response.status}`);
+          
           if (response.data && Array.isArray(response.data.requests)) {
-            const newTxs = response.data.requests.filter(tx => 
+            const pageTransactions = response.data.requests;
+            console.log(`📦 Received ${pageTransactions.length} transactions on this page`);
+            
+            // LOG FIRST FEW TRANSACTIONS FROM THIS PAGE
+            if (pageTransactions.length > 0) {
+              console.log(`📅 Page ${pageCount} transactions (showing first 3):`);
+              pageTransactions.slice(0, 3).forEach((tx, i) => {
+                console.log(`   ${i + 1}. ${tx.id.substring(0, 20)}... - ${tx.createdAt} - Status: ${tx.status}`);
+              });
+            }
+            
+            // Filter out duplicates
+            const newTxs = pageTransactions.filter(tx => 
               !transactions.some(existing => existing.id === tx.id)
             );
             
             transactions.push(...newTxs);
-            console.log(`Found ${newTxs.length} new transactions for ${queryType}`);
+            console.log(`✅ Added ${newTxs.length} new unique transactions (total: ${transactions.length})`);
+            
+            // CHECK FOR YOUR SPECIFIC TRANSACTION
+            const yourTxId = '0x632b59c53d2585391bdffb245472236f1c1599819eca8996890bc4ee2c1d2568';
+            const foundYourTx = pageTransactions.find(tx => tx.id === yourTxId);
+            if (foundYourTx) {
+              console.log(`🎯 FOUND YOUR TRANSACTION on page ${pageCount}!`);
+              console.log(`   ID: ${foundYourTx.id}`);
+              console.log(`   Date: ${foundYourTx.createdAt}`);
+              console.log(`   Status: ${foundYourTx.status}`);
+            }
             
             continuation = response.data.continuation;
+            console.log(`🔗 Continuation token: ${continuation ? 'YES' : 'NO'}`);
             retryCount = 0;
           } else {
-            console.log('Unexpected API response format');
+            console.log('❌ Unexpected API response format');
+            console.log('Response data keys:', Object.keys(response.data || {}));
             break;
           }
         } catch (error) {
           retryCount++;
-          console.warn(`API error (attempt ${retryCount}/${MAX_RETRIES}): ${error.message}`);
+          console.warn(`⚠️ API error (attempt ${retryCount}/${MAX_RETRIES}): ${error.message}`);
           
           if (retryCount >= MAX_RETRIES) {
-            console.error(`Max retries reached for ${queryType}`);
+            console.error(`💥 Max retries reached for ${queryType}`);
             break;
           }
           
           const backoff = Math.pow(2, retryCount - 1) * 1000;
-          console.log(`Retrying in ${backoff/1000} seconds...`);
+          console.log(`⏳ Retrying in ${backoff/1000} seconds...`);
           await sleep(backoff);
         }
         
         await sleep(1000);
         
-      } while (continuation && pageCount < 10);
+      } while (continuation && pageCount < 20); // ← INCREASED FROM 10 TO 20 PAGES
       
     } catch (error) {
-      console.warn(`Error in ${queryType} transaction cycle:`, error.message);
+      console.warn(`💥 Error in ${queryType} transaction cycle:`, error.message);
     }
   }
   
-  console.log(`Total unique transactions found: ${transactions.length}`);
+  console.log(`\n📊 FINAL RESULTS:`);
+  console.log(`   Total unique transactions found: ${transactions.length}`);
   
-  // Only cache results if we found transactions
+  // COMPREHENSIVE DEBUG: Show latest transactions
   if (transactions.length > 0) {
-    fs.writeFileSync(cacheFile, JSON.stringify({
+    console.log(`\n📅 Latest 10 transactions by date:`);
+    transactions
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+      .forEach((tx, i) => {
+        console.log(`   ${i + 1}. ${tx.id.substring(0, 20)}... - ${tx.createdAt} - Status: ${tx.status}`);
+      });
+    
+    // Check if your specific transaction is in the final array
+    const yourTxId = '0x632b59c53d2585391bdffb245472236f1c1599819eca8996890bc4ee2c1d2568';
+    const yourTx = transactions.find(tx => tx.id === yourTxId);
+    console.log(`\n🎯 Your specific transaction in final results: ${yourTx ? '✅ YES' : '❌ NO'}`);
+    
+    if (yourTx) {
+      console.log(`   Found at index: ${transactions.indexOf(yourTx)}`);
+      console.log(`   Transaction date: ${yourTx.createdAt}`);
+      console.log(`   Transaction status: ${yourTx.status}`);
+    }
+    
+    // Cache the results
+    const cacheData = {
       timestamp: Date.now(),
       transactions
-    }));
+    };
+    
+    fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
+    console.log(`💾 Cached ${transactions.length} transactions to ${cacheFile}`);
+  } else {
+    console.log(`❌ No transactions found to cache`);
   }
   
   return transactions;
@@ -267,14 +327,23 @@ function extractRawTotals(transactions) {
   return rawTotals;
 }
 
-// Main analysis function - UPDATED WITH FORCE REFRESH SUPPORT
+// Main analysis function - UPDATED WITH FORCE REFRESH SUPPORT AND DEBUG
 async function analyzeAddress(address, options = {}) {
   const { forceRefresh = false } = options;
+  
+  console.log(`\n🚀 STARTING ANALYSIS`);
+  console.log(`   Address: ${address}`);
+  console.log(`   Force refresh: ${forceRefresh}`);
+  console.log(`   Timestamp: ${new Date().toISOString()}`);
   
   // Fetch transactions with force refresh option
   const transactions = await fetchTransactions(address, forceRefresh);
   
+  console.log(`\n📈 ANALYSIS RESULTS:`);
+  console.log(`   Transactions found: ${transactions.length}`);
+  
   if (transactions.length === 0) {
+    console.log(`❌ No transactions found - returning error response`);
     return {
       success: false,
       error: 'No transactions found',
@@ -288,6 +357,7 @@ async function analyzeAddress(address, options = {}) {
   
   // Extract raw totals for simple volume reporting
   const rawTotals = extractRawTotals(transactions);
+  console.log(`💰 Tokens found: ${Object.keys(rawTotals).length}`);
   
   // Prepare summary data
   const uniqueDates = new Set();
@@ -326,8 +396,13 @@ async function analyzeAddress(address, options = {}) {
     }
   }
   
+  console.log(`📊 Summary calculated:`);
+  console.log(`   Unique dates: ${uniqueDates.size}`);
+  console.log(`   Chains used: ${chainsUsed.size}`);
+  console.log(`   Tokens: ${tokens.size}`);
+  
   // Fetch prices
-  console.log('Fetching token prices...');
+  console.log(`\n💲 Fetching token prices...`);
   for (const tokenSymbol in rawTotals) {
     const token = rawTotals[tokenSymbol];
     if (token.address && token.chainId) {
@@ -352,8 +427,7 @@ async function analyzeAddress(address, options = {}) {
     });
   }
   
-  // Return the results as a structured object
-  return {
+  const result = {
     success: true,
     summary: {
       firstDate: Array.from(uniqueDates).sort()[0] || 'N/A',
@@ -364,6 +438,14 @@ async function analyzeAddress(address, options = {}) {
     },
     tokens: formattedTokens
   };
+  
+  console.log(`\n✅ ANALYSIS COMPLETE:`);
+  console.log(`   Success: ${result.success}`);
+  console.log(`   Transaction count: ${result.summary.transactionCount}`);
+  console.log(`   Total USD value: ${formatUSD(result.summary.totalUSDValue)}`);
+  console.log(`   First date: ${result.summary.firstDate}`);
+  
+  return result;
 }
 
 module.exports = { analyzeAddress };
