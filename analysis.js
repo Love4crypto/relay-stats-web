@@ -114,8 +114,8 @@ async function fetchTokenPrice(tokenAddress, chainId) {
   }
 }
 
-// Fetch transactions with retry logic
-async function fetchTransactions(address) {
+// Fetch transactions with retry logic - UPDATED WITH FORCE REFRESH SUPPORT
+async function fetchTransactions(address, forceRefresh = false) {
   const addressType = getAddressType(address);
   console.log(`Address type detected: ${addressType}`);
   
@@ -123,8 +123,8 @@ async function fetchTransactions(address) {
   const safeKey = safeCacheKey(address);
   const cacheFile = path.join(CACHE_DIR, `${safeKey}.json`);
   
-  // Check cache first
-  if (fs.existsSync(cacheFile)) {
+  // Check cache first (unless force refresh is requested)
+  if (!forceRefresh && fs.existsSync(cacheFile)) {
     try {
       const cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
       if (Date.now() - cache.timestamp < CACHE_DURATION_MS) {
@@ -136,15 +136,19 @@ async function fetchTransactions(address) {
     }
   }
   
+  if (forceRefresh) {
+    console.log('Force refresh requested - fetching fresh data from API');
+  }
+  
+  // Rest of the function remains the same...
   const transactions = [];
   
-  // Try different query parameters based on address type
-  const queryTypes = ['user']; // Only try 'user' first for reliability
+  const queryTypes = ['user'];
   
   for (const queryType of queryTypes) {
     console.log(`Attempting to fetch transactions with ${queryType}=${address}`);
     
-    const params = { limit: 20 }; // More conservative limit
+    const params = { limit: 20 };
     params[queryType] = address;
     
     let continuation = null;
@@ -164,11 +168,10 @@ async function fetchTransactions(address) {
         try {
           const response = await axios.get(`${API_BASE_URL}/requests/v2`, { 
             params,
-            timeout: 10000 // 10 second timeout
+            timeout: 10000
           });
           
           if (response.data && Array.isArray(response.data.requests)) {
-            // Deduplicate transactions
             const newTxs = response.data.requests.filter(tx => 
               !transactions.some(existing => existing.id === tx.id)
             );
@@ -177,8 +180,6 @@ async function fetchTransactions(address) {
             console.log(`Found ${newTxs.length} new transactions for ${queryType}`);
             
             continuation = response.data.continuation;
-            
-            // Reset retry count on success
             retryCount = 0;
           } else {
             console.log('Unexpected API response format');
@@ -193,16 +194,14 @@ async function fetchTransactions(address) {
             break;
           }
           
-          // Exponential backoff (1s, 2s, 4s)
           const backoff = Math.pow(2, retryCount - 1) * 1000;
           console.log(`Retrying in ${backoff/1000} seconds...`);
           await sleep(backoff);
         }
         
-        // Prevent rate limiting
         await sleep(1000);
         
-      } while (continuation && pageCount < 10); // Cap at 10 pages
+      } while (continuation && pageCount < 10);
       
     } catch (error) {
       console.warn(`Error in ${queryType} transaction cycle:`, error.message);
@@ -268,10 +267,12 @@ function extractRawTotals(transactions) {
   return rawTotals;
 }
 
-// Main analysis function
-async function analyzeAddress(address) {
-  // Fetch transactions
-  const transactions = await fetchTransactions(address);
+// Main analysis function - UPDATED WITH FORCE REFRESH SUPPORT
+async function analyzeAddress(address, options = {}) {
+  const { forceRefresh = false } = options;
+  
+  // Fetch transactions with force refresh option
+  const transactions = await fetchTransactions(address, forceRefresh);
   
   if (transactions.length === 0) {
     return {
