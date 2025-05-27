@@ -88,37 +88,6 @@ let currentUserStats = null;
 let leaderboardCache = new Map();
 let lastOptInAction = null;
 
-function cleanURL() {
-  const url = new URL(window.location);
-  let changed = false;
-  
-  // Remove pagination parameters
-  if (url.searchParams.has('page')) {
-    url.searchParams.delete('page');
-    changed = true;
-  }
-  
-  // Remove other unwanted parameters
-  const unwantedParams = ['limit', 'offset', 'pageSize'];
-  unwantedParams.forEach(param => {
-    if (url.searchParams.has(param)) {
-      url.searchParams.delete(param);
-      changed = true;
-    }
-  });
-  
-  // Update URL without page reload if changes were made
-  if (changed) {
-    window.history.replaceState({}, '', url);
-    console.log('🧹 URL cleaned of pagination parameters');
-  }
-}
-
-// Update your DOMContentLoaded event listener to include URL cleaning:
-document.addEventListener('DOMContentLoaded', () => {
-  // Clean URL first thing when page loads
-  cleanURL();
-
 function clearLeaderboardCache() {
   leaderboardCache.clear();
   console.log('🧹 Leaderboard cache cleared');
