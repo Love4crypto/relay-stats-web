@@ -88,6 +88,37 @@ let currentUserStats = null;
 let leaderboardCache = new Map();
 let lastOptInAction = null;
 
+function cleanURL() {
+  const url = new URL(window.location);
+  let changed = false;
+  
+  // Remove pagination parameters
+  if (url.searchParams.has('page')) {
+    url.searchParams.delete('page');
+    changed = true;
+  }
+  
+  // Remove other unwanted parameters
+  const unwantedParams = ['limit', 'offset', 'pageSize'];
+  unwantedParams.forEach(param => {
+    if (url.searchParams.has(param)) {
+      url.searchParams.delete(param);
+      changed = true;
+    }
+  });
+  
+  // Update URL without page reload if changes were made
+  if (changed) {
+    window.history.replaceState({}, '', url);
+    console.log('🧹 URL cleaned of pagination parameters');
+  }
+}
+
+// Update your DOMContentLoaded event listener to include URL cleaning:
+document.addEventListener('DOMContentLoaded', () => {
+  // Clean URL first thing when page loads
+  cleanURL();
+
 function clearLeaderboardCache() {
   leaderboardCache.clear();
   console.log('🧹 Leaderboard cache cleared');
@@ -733,48 +764,58 @@ function checkExistingConnections() {
 
   // ========== LEADERBOARD FUNCTIONS ==========
   
-  async function loadLeaderboardWithPagination(type = 'transactions', page = 1, search = '') {
-    try {
-      showLoadingSpinner();
-      
-      console.log(`📊 Loading ${type} leaderboard, page ${page}, search: ${search}`);
-      
-      const params = new URLSearchParams({
-        page: page,
-        limit: 50,
-        ...(search && { search: search })
-      });
-      
-      const response = await fetch(`/api/leaderboard/${type}?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        currentLeaderboardPage = data.pagination.currentPage;
-        totalLeaderboardPages = data.pagination.totalPages;
-        leaderboardSearch = search;
-        
-        displayLeaderboard(data.leaderboard, type);
-        displayPaginationControls(data.pagination, type);
-        
-        // Update URL without page reload
-        const url = new URL(window.location);
-        url.searchParams.set('page', page);
-        if (search) {
-          url.searchParams.set('search', search);
-        } else {
-          url.searchParams.delete('search');
-        }
-        window.history.replaceState({}, '', url);
-        
-      } else {
-        showMessage('Failed to load leaderboard: ' + data.error, 'error');
-      }
-    } catch (error) {
-      showMessage('Error loading leaderboard: ' + error.message, 'error');
-    } finally {
-      hideLoadingSpinner();
+  // Replace your loadLeaderboardWithPagination function with this:
+
+async function loadLeaderboardWithPagination(type = 'transactions', page = 1, search = '') {
+  try {
+    showLoadingSpinner();
+    
+    console.log(`📊 Loading ${type} leaderboard (no pagination)`);
+    
+    // Don't use page/pagination parameters anymore
+    const params = new URLSearchParams();
+    if (search) {
+      params.append('search', search);
     }
+    
+    const response = await fetch(`/api/leaderboard/${type}?${params}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      // Don't track pagination anymore
+      currentLeaderboardPage = 1;
+      totalLeaderboardPages = 1;
+      leaderboardSearch = search;
+      
+      displayLeaderboard(data.leaderboard, type);
+      
+      // Don't display pagination controls
+      // displayPaginationControls(data.pagination, type);
+      
+      // FIXED: Don't modify URL with page parameters
+      if (search) {
+        const url = new URL(window.location);
+        url.searchParams.set('search', search);
+        // Remove any existing page parameter
+        url.searchParams.delete('page');
+        window.history.replaceState({}, '', url);
+      } else {
+        // Clean URL - remove all pagination parameters
+        const url = new URL(window.location);
+        url.searchParams.delete('page');
+        url.searchParams.delete('search');
+        window.history.replaceState({}, '', url);
+      }
+      
+    } else {
+      showMessage('Failed to load leaderboard: ' + data.error, 'error');
+    }
+  } catch (error) {
+    showMessage('Error loading leaderboard: ' + error.message, 'error');
+  } finally {
+    hideLoadingSpinner();
   }
+}
 
   function displayLeaderboard(users, type) {
     if (!leaderboardBody) {
