@@ -1860,3 +1860,17 @@ header h2 {
     grid-template-columns: 1fr;
   }
 }
+
+/* TEMPORARILY HIDE LEADERBOARD */
+#leaderboard-section,
+.leaderboard-section,
+.leaderboard-tabs,
+.leaderboard-container,
+.leaderboard-controls,
+.pagination-controls,
+.join-leaderboard-btn,
+.opt-in-btn,
+.user-rank-section {
+  display: none !important;
+  visibility: hidden !important;
+}

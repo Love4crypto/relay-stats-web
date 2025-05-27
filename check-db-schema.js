@@ -1,113 +1,56 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const leaderboard = require('./leaderboard');
 
-const dbPath = path.join(__dirname, 'leaderboard.db');
-
-function fixLeaderboardData() {
-  const db = new sqlite3.Database(dbPath);
-  
-  console.log('🔧 Starting leaderboard data integrity check...');
-  
-  db.serialize(() => {
-    // 1. Fix any null opt_in_leaderboard values
-    db.run(`
-      UPDATE user_stats 
-      SET opt_in_leaderboard = 0 
-      WHERE opt_in_leaderboard IS NULL
-    `, function(err) {
-      if (err) {
-        console.error('Error fixing null opt_in values:', err);
-      } else {
-        console.log(`✅ Fixed ${this.changes} null opt_in values`);
-      }
-    });
+async function testLeaderboard() {
+  try {
+    console.log('🧪 Testing leaderboard functionality...\n');
     
-    // 2. Fix any invalid opt_in values (should be 0 or 1)
-    db.run(`
-      UPDATE user_stats 
-      SET opt_in_leaderboard = 
-        CASE 
-          WHEN opt_in_leaderboard > 0 THEN 1 
-          ELSE 0 
-        END
-      WHERE opt_in_leaderboard NOT IN (0, 1)
-    `, function(err) {
-      if (err) {
-        console.error('Error fixing invalid opt_in values:', err);
-      } else {
-        console.log(`✅ Fixed ${this.changes} invalid opt_in values`);
-      }
-    });
+    // Initialize database
+    await leaderboard.initializeDatabase();
+    console.log('✅ Database initialized\n');
     
-    // 3. Fix any users with zero transactions but opted in
-    db.run(`
-      UPDATE user_stats 
-      SET opt_in_leaderboard = 0 
-      WHERE transaction_count <= 0 AND opt_in_leaderboard = 1
-    `, function(err) {
-      if (err) {
-        console.error('Error fixing zero transaction counts:', err);
-      } else {
-        console.log(`✅ Fixed ${this.changes} users with zero transactions but opted in`);
-      }
-    });
+    // Test all leaderboard types
+    const types = ['transactions', 'volume', 'chains', 'tokens'];
     
-    // 4. Update timestamps for entries that need them
-    db.run(`
-      UPDATE user_stats 
-      SET 
-        last_updated = strftime('%s', 'now'),
-        last_activity = strftime('%s', 'now')
-      WHERE last_updated IS NULL OR last_activity IS NULL
-    `, function(err) {
-      if (err) {
-        console.error('Error fixing timestamps:', err);
-      } else {
-        console.log(`✅ Fixed ${this.changes} timestamp entries`);
-      }
-    });
-    
-    // 5. Show final stats
-    db.get(`
-      SELECT 
-        COUNT(*) as total, 
-        COUNT(CASE WHEN opt_in_leaderboard = 1 THEN 1 END) as opted_in,
-        COUNT(CASE WHEN transaction_count > 0 THEN 1 END) as with_transactions
-      FROM user_stats
-    `, (err, result) => {
-      if (err) {
-        console.error('Error getting stats:', err);
-      } else {
-        console.log(`\n📊 Final stats:`);
-        console.log(`   Total users: ${result.total}`);
-        console.log(`   Opted in: ${result.opted_in}`);
-        console.log(`   With transactions: ${result.with_transactions}`);
-      }
+    for (const type of types) {
+      console.log(`📊 Testing ${type} leaderboard:`);
       
-      // 6. Show the current opted-in users
-      db.all(`
-        SELECT address, transaction_count, opt_in_leaderboard 
-        FROM user_stats 
-        WHERE opt_in_leaderboard = 1 
-        ORDER BY transaction_count DESC
-      `, (err, users) => {
-        if (err) {
-          console.error('Error getting opted-in users:', err);
-        } else {
-          console.log(`\n✅ Current opted-in users:`);
-          users.forEach((user, i) => {
-            console.log(`   ${i + 1}. ${user.address.substring(0, 20)}... (${user.transaction_count} txns)`);
-          });
-        }
-        db.close();
-        console.log('\n🎉 Database integrity check completed!');
-      });
-    });
-  });
+      const result = await leaderboard.getLeaderboardPaginated(type, 10, 0);
+      
+      if (result.data && result.data.length > 0) {
+        console.log(`   ✅ Found ${result.data.length} entries (total: ${result.total})`);
+        result.data.forEach((user, i) => {
+          console.log(`   ${i + 1}. ${user.address.substring(0, 20)}... - ${user[type === 'transactions' ? 'transaction_count' : type === 'volume' ? 'total_usd_value' : type === 'chains' ? 'unique_chains' : 'unique_tokens']}`);
+        });
+      } else {
+        console.log('   ⚠️  No entries found');
+      }
+      console.log('');
+    }
+    
+    // Test user rank for opted-in users
+    console.log('🎯 Testing user ranks:');
+    const testAddresses = [
+      '8hi1pwkhcofh2tcu4paf34jdkrhltpqpyjayxwyah2ta',
+      '0x3d4233ff0fecc8bd801ee0f80d3ec4f9f28f91d6'
+    ];
+    
+    for (const address of testAddresses) {
+      const rankResult = await leaderboard.getUserRank(address);
+      if (rankResult.success) {
+        console.log(`   ${address.substring(0, 20)}...:`);
+        console.log(`   - Transactions rank: ${rankResult.ranks.transactions}`);
+        console.log(`   - Volume rank: ${rankResult.ranks.volume}`);
+        console.log(`   - Chains rank: ${rankResult.ranks.chains}`);
+        console.log(`   - Tokens rank: ${rankResult.ranks.tokens}`);
+        console.log(`   - Opted in: ${rankResult.userStats.opt_in_leaderboard ? 'Yes' : 'No'}\n`);
+      }
+    }
+    
+    console.log('🎉 All leaderboard tests completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+  }
 }
 
-if (require.main === module) {
-  fixLeaderboardData();
-}
-
-module.exports = { fixLeaderboardData };
+testLeaderboard();

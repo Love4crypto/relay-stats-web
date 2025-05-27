@@ -185,8 +185,9 @@ async function updateUserStats(address, autoOptIn = false) {
   });
 }
 
-// FIXED: Improved leaderboard query with better filtering
-async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = null) {
+// Replace the getLeaderboardPaginated function with this:
+
+async function getLeaderboardPaginated(type, limit = null, offset = 0, search = null) {
   return new Promise((resolve, reject) => {
     const validTypes = {
       'transactions': 'transaction_count',
@@ -201,7 +202,7 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
     }
 
     try {
-      // FIXED: Ensure we only show opted-in users with valid data
+      // FIXED: Show all opted-in users with valid data (no pagination)
       let whereClause = 'WHERE opt_in_leaderboard = 1 AND transaction_count > 0';
       let params = [];
       
@@ -210,7 +211,7 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
         params.push(`%${search}%`);
       }
 
-      // Get total count for pagination
+      // Get total count
       const countQuery = `SELECT COUNT(*) as total FROM user_stats ${whereClause}`;
       
       db.get(countQuery, params, (err, countResult) => {
@@ -220,8 +221,8 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
         
         const total = countResult.total;
 
-        // Get paginated data with consistent ordering
-        const dataQuery = `
+        // Get ALL data (no LIMIT/OFFSET unless specifically requested)
+        let dataQuery = `
           SELECT 
             address,
             transaction_count,
@@ -235,10 +236,15 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
           FROM user_stats 
           ${whereClause}
           ORDER BY ${column} DESC, address ASC
-          LIMIT ? OFFSET ?
         `;
         
-        const dataParams = [...params, limit, offset];
+        let dataParams = [...params];
+        
+        // Only add LIMIT if specifically requested
+        if (limit && limit > 0) {
+          dataQuery += ' LIMIT ? OFFSET ?';
+          dataParams.push(limit, offset);
+        }
         
         db.all(dataQuery, dataParams, (err, users) => {
           if (err) {
@@ -251,7 +257,14 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
               rank: user.rank,
               total_usd_value: parseFloat(user.total_usd_value) || 0
             })),
-            total: total
+            total: total,
+            // Disable pagination info
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              hasNext: false,
+              hasPrev: false
+            }
           });
         });
       });
@@ -262,7 +275,6 @@ async function getLeaderboardPaginated(type, limit = 50, offset = 0, search = nu
     }
   });
 }
-
 // FIXED: Improved user rank calculation
 async function getUserRank(address) {
   return new Promise((resolve, reject) => {
