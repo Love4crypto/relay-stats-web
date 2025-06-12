@@ -7,10 +7,10 @@ A powerful web application for analyzing blockchain transactions across multiple
 <div align="center">
 
 ### Transaction Analysis Dashboard
-<img src="demo1.png" alt="Relay Stats Demo 1" width="700"/>
+<img src="https://github.com/Love4crypto/relay-stats-web/blob/main/public/demo1.png" alt="Relay Stats Demo 1" width="700"/>
 
 ### Multi-Chain Analytics Overview  
-<img src="demo2.png" alt="Relay Stats Demo 2" width="700"/>
+<img src="https://github.com/Love4crypto/relay-stats-web/blob/main/public/demo2.png" alt="Relay Stats Demo 2" width="700"/>
 
 </div>
 
